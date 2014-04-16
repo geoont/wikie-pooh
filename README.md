@@ -15,12 +15,13 @@ if any dependencies are missing simply install them with npm install.
 
 ## Usage
 
-To check the examples go to cd ~/.npm/nodemw/0.3.14/package/examples.  To see the content of the Wikipedia *River* page eun the pooh1.njs file: ```node pooh1.njs```.  *Category* lines at the end of the page look promising.  
-
+ * To check the examples go to cd ~/.npm/nodemw/0.3.14/package/examples.  
+ * To see the content of the retrieved Wikipedia *River* page run: ```node pooh1.njs```.  
 
 ## Developing
 
-
+ * nodemw docs are here: https://github.com/macbre/nodemw
+ * *Category* lines at the end of the page look promising, also check http://en.wikipedia.org/wiki/Help:Category .
 
 ### Tools
 

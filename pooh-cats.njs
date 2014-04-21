@@ -45,7 +45,9 @@ var rd = readline.createInterface({
 //   - fail if a page or category does not exist
 //   - create two files: one with unique pages and categories (1.cats) and the other with page-category pairs (1.pairs)
 var outp = fs.WriteStream(out_cats);
-var cat_count = 0, page_count = 0;
+outp.on('close', function() {} );
+var in_cat_count = 0, in_page_count = 0;
+var out_count = 0;
 rd.on('line', function(line) {
 	var entry = line.trim();
     console.log("Processing entry: " + entry);
@@ -59,15 +61,28 @@ rd.on('line', function(line) {
 		
 			pages.forEach(function(page) {
 				outp.write( page.title + "\n" );
-			//	client.getArticle(page.title, function(content) {
-			//		client.log('%s: %s', page.title, content.substr(0, 75).replace(/\n/g, ' '));
-			//	});
+				out_count++;
 			});
 		});
-		cat_count++;
+		in_cat_count++;
 	} else {
-		page_count++;
+		if (in_page_count > 0) return;
+		client.getArticle(entry, function(content) {
+//			client.log(content);
+			client.log('Downloaded %s: %s', page.title, content.substr(0, 75).replace(/\n/g, ' '));
+			content.split(/\n/).forEach( function(line) {
+				re = /\[\[Catgeoru:([^]])+\]\]/;
+				var ma = re.exec(line);
+				if( ma ) {
+					console.log(ma[1]);
+				}
+			});
+		});
+		in_page_count++;
 	}    
+}).on('close', function() {
+	console.log('Input processed: %s categories and %s pages from %s', in_cat_count, in_page_count, init_cats);
+	console.log('Output produced: %s entries into %s', out_count, out_cats);
 });
 
 // 2. manually cleanup the first file from irrelevant categories
@@ -78,6 +93,5 @@ rd.on('line', function(line) {
 // 4. repeat until *.cats file stops growing
 // 5. visualize in graphviz or SOFT from *.pairs file  
 
-console.log('Processed %s categories and %s pages from the %s', cat_count, page_count, init_cats);
 console.log('finished');
  

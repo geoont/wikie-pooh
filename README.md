@@ -5,7 +5,7 @@ Downloader for some Wikipedia articles and related information
 ## Requirements
 
 1.  Download an install node.js from http://nodejs.org/download/
-2.  Install dependencies: ```npm install nodemw``` 
+2.  Install dependencies: ```npm install nodemw```
 3.  Run tests
 ```
 cd ~/.npm/nodemw/0.3.14/package
@@ -17,15 +17,18 @@ if any dependencies are missing simply install them with npm install.
 
  * To check the examples go to cd ~/.npm/nodemw/0.3.14/package/examples.  
  * To see the content of the retrieved Wikipedia *River* page run: ```node pooh1.njs```.  
+ * To retrieve a list of categories and relevant pages run: ```node wikie-pohh.njs en 0.cats``` where en is the language and 0.cats is a file with initial list of pages and categories.  This will produce a new file 1.cats (or higher number) with a list of pages and categories retrieved based on the original list.
 
 ## Developing
 
  * nodemw docs are here: https://github.com/macbre/nodemw
- * *Category* lines at the end of the page look promising, also check http://en.wikipedia.org/wiki/Help:Category .
+ * Wikipedia *Category*
+  * lines at the end of the page are parsed out
+  * general information: http://en.wikipedia.org/wiki/Help:Category .
 
 ### Tools
 
 Created with [Nodeclipse](https://github.com/Nodeclipse/nodeclipse-1)
- ([Eclipse Marketplace](http://marketplace.eclipse.org/content/nodeclipse), [site](http://www.nodeclipse.org))   
+ ([Eclipse Marketplace](http://marketplace.eclipse.org/content/nodeclipse), [site](http://www.nodeclipse.org))
 
 Nodeclipse is free open-source project that grows with your contributions.

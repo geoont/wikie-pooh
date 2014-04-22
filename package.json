@@ -2,7 +2,7 @@
   "name": "wikie-pooh",
   "version": "0.1.0",
   "description": "wikie-pooh",
-  "main": "hello-world-server.njs",
+  "main": "none.njs",
   "scripts": {
     "test": "echo \"Error: no test specified! Configure in package.json\" && exit 1"
   },
@@ -12,7 +12,7 @@
     "eclipse",
     "nodeclipse"
   ],
-  "author": "",
+  "author": "Alex Sorokine and Chen-Chieh Feng",
   "license": "MIT",
   "readmeFilename": "README.md"
 }

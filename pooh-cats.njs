@@ -26,7 +26,7 @@ var bot = require('nodemw');
 var client = new bot({
     server: lang + '.wikipedia.org',  // host name of MediaWiki-powered site
     path: '/w',                  // path to api.php script
-    debug: true                // is more verbose when set to true
+    debug: false                // is more verbose when set to true
 });
 
 var fs = require('fs'),
@@ -45,16 +45,18 @@ var rd = readline.createInterface({
 //   - fail if a page or category does not exist
 //   - create two files: one with unique pages and categories (1.cats) and the other with page-category pairs (1.pairs)
 var outp = fs.WriteStream(out_cats);
-outp.on('close', function() {} );
 var in_cat_count = 0, in_page_count = 0;
 var out_count = 0;
+outp.on('finish', function() {
+	console.log('Output produced: %s entries into %s', out_count, out_cats);
+} );
 rd.on('line', function(line) {
 	var entry = line.trim();
     console.log("Processing entry: " + entry);
 
 	if (entry.indexOf('Category:') == 0) {
 		var category = entry.replace(/^Category:/, '');
-		console.log(category);
+		console.log("Retrieving category: " + category);
 		client.getPagesInCategory(category, function(pages) {
 			//	client.log('Pages in category');
 			//	client.logData(pages);
@@ -67,22 +69,28 @@ rd.on('line', function(line) {
 		in_cat_count++;
 	} else {
 		if (in_page_count > 0) return;
+		console.log("getArt");
 		client.getArticle(entry, function(content) {
-//			client.log(content);
-			client.log('Downloaded %s: %s', page.title, content.substr(0, 75).replace(/\n/g, ' '));
-			content.split(/\n/).forEach( function(line) {
-				re = /\[\[Catgeoru:([^]])+\]\]/;
-				var ma = re.exec(line);
+			//console.log(content);
+			console.log('Downloaded %s: %s...', entry, content.substr(0, 25).replace(/\n/g, ' '));
+			var lines = content.match(/[^\r\n]+/g);
+			//console.log(lines);
+			for( var i = 0; i < lines.length; i++) {
+				//console.log(lines[i]);
+				var re = /\[\[(Category:[^\]]+)\]\]/;
+				var ma = re.exec(lines[i]);
 				if( ma ) {
-					console.log(ma[1]);
+					//console.log(lines[i]);
+					//console.log(ma[1]);
+					outp.write( ma[1] + "\n");
 				}
-			});
+			}
 		});
 		in_page_count++;
 	}    
 }).on('close', function() {
 	console.log('Input processed: %s categories and %s pages from %s', in_cat_count, in_page_count, init_cats);
-	console.log('Output produced: %s entries into %s', out_count, out_cats);
+	//outp.end();
 });
 
 // 2. manually cleanup the first file from irrelevant categories

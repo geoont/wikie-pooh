@@ -51,7 +51,7 @@ outp.on('finish', function() {
 	console.log('Output produced: %s entries into %s', out_count, out_cats);
 } );
 rd.on('line', function(line) {
-	var entry = line.trim();
+	var entry = line.split("\t")[0].trim();
     console.log("Processing entry: " + entry);
 
 	if (entry.indexOf('Category:') == 0) {
@@ -62,17 +62,25 @@ rd.on('line', function(line) {
 			//	client.logData(pages);
 		
 			pages.forEach(function(page) {
-				outp.write( page.title + "\n" );
+				outp.write( page.title + "\t" + entry + "\n" );
 				out_count++;
 			});
 		});
 		in_cat_count++;
 	} else {
 		if (in_page_count > 0) return;
-		console.log("getArt");
+		//console.log("getArt");
 		client.getArticle(entry, function(content) {
 			//console.log(content);
 			console.log('Downloaded %s: %s...', entry, content.substr(0, 25).replace(/\n/g, ' '));
+			
+			/* retreiving number of edits */
+			var params = {
+        		action: 'ask',
+        		query: '[[Modification date::+]]|?Modification date|sort=Modification date|order=desc'
+    		}
+			
+			/* parsing out categories */
 			var lines = content.match(/[^\r\n]+/g);
 			//console.log(lines);
 			for( var i = 0; i < lines.length; i++) {
@@ -82,7 +90,7 @@ rd.on('line', function(line) {
 				if( ma ) {
 					//console.log(lines[i]);
 					//console.log(ma[1]);
-					outp.write( ma[1] + "\n");
+					outp.write( ma[1] + "\t" + entry + "\n");
 				}
 			}
 		});

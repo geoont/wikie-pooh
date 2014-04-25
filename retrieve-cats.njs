@@ -74,12 +74,6 @@ rd.on('line', function(line) {
 			//console.log(content);
 			console.log('Downloaded %s: %s...', entry, content.substr(0, 25).replace(/\n/g, ' '));
 			
-			/* retreiving number of edits */
-			var params = {
-        		action: 'ask',
-        		query: '[[Modification date::+]]|?Modification date|sort=Modification date|order=desc'
-    		}
-			
 			/* parsing out categories */
 			var lines = content.match(/[^\r\n]+/g);
 			//console.log(lines);

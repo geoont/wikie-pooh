@@ -15,8 +15,12 @@ var lang      = args[0],
     init_cats = args[1];
 
 /* output file name: bump the number of input file by one */
-var fname_c = parseInt(init_cats);
-var out_cats = isNaN(fname_c) ? 'out.cats' : (fname_c+1) + '.cats';
+var out_cats = init_cats.replace( /(\d+)/, function(match, p1, offset, str) {
+  //console.log(match + ", " + p1 + ", " + offset + ", " + str);
+  return parseInt(p1) + 1;
+});
+if (out_cats == init_cats)
+  out_cats = "out.cats";
 
 console.log("language=" + lang + ", init_cats=" + init_cats + ", out_cats=" + out_cats);
 

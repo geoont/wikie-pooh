@@ -17,7 +17,10 @@ if any dependencies are missing simply install them with npm install.
 
  * To check the examples go to cd ~/.npm/nodemw/0.3.14/package/examples.  
  * To see the content of the retrieved Wikipedia *River* page run: ```node pooh1.njs```.  
- * To retrieve a list of categories and relevant pages run: ```node wikie-pohh.njs en 0.cats``` where en is the language and 0.cats is a file with initial list of pages and categories.  This will produce a new file 1.cats (or higher number) with a list of pages and categories retrieved based on the original list.
+ * To retrieve a list of categories and relevant pages run: ```node retrieve-cats.njs en 0.cats``` where en is the language and 0.cats is a file with initial list of pages and categories.  This will produce a new file 1.cats (or higher number) with a list of pages and categories retrieved based on the original list.
+ * To get edits stats run ```node retrieve-edit-stats.njs en 0.cats```.
+
+All file are tab-delimited.
 
 ## Developing
 

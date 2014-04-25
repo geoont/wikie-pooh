@@ -16,6 +16,7 @@ var lang      = args[0],
 
 /* output file name: bump the number of input file by one */
 var outp = init_cats.replace(/\.cats$/, ".stats");
+if (outp == init_cats) outp = "out.stats";
 
 console.log("language=" + lang + ", init_cats=" + init_cats + ", outp=" + outp);
 

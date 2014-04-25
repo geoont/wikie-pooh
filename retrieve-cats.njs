@@ -1,12 +1,12 @@
 /**
- * Download subcategories for a specified Catgeory
+ * Retrieve related categories for a list pages or categories
  */
 'use strict';
 
 var args = process.argv.slice(2);
 if (args.length != 2) {
-	console.error("usage: node " + process.argv[1] + " <language> <input_list.cats>\n" + 
-		"  where\n    <language> is Wikipedia language code (en, zh, ru, etc.)\n" + 
+	console.error("usage: node " + process.argv[1] + " <language> <input_list.cats>\n" +
+		"  where\n    <language> is Wikipedia language code (en, zh, ru, etc.)\n" +
 		"    <input_list.cats> is a file with an initial list of pages and categories");
 	process.exit(1);
 }
@@ -45,14 +45,20 @@ var rd = readline.createInterface({
 //   - fail if a page or category does not exist
 //   - create two files: one with unique pages and categories (1.cats) and the other with page-category pairs (1.pairs)
 var outp = fs.WriteStream(out_cats);
+outp.write("#entry\tsource\n");
 var in_cat_count = 0, in_page_count = 0;
 var out_count = 0;
 outp.on('finish', function() {
 	console.log('Output produced: %s entries into %s', out_count, out_cats);
 } );
 rd.on('line', function(line) {
+
+  /* skip comments and empty lines */
+  line = line.replace(/#.*$/, '');
+  if (line.match(/^\s*$/)) return;
+
 	var entry = line.split("\t")[0].trim();
-    console.log("Processing entry: " + entry);
+  console.log("Processing entry: " + entry);
 
 	if (entry.indexOf('Category:') == 0) {
 		var category = entry.replace(/^Category:/, '');
@@ -60,7 +66,7 @@ rd.on('line', function(line) {
 		client.getPagesInCategory(category, function(pages) {
 			//	client.log('Pages in category');
 			//	client.logData(pages);
-		
+
 			pages.forEach(function(page) {
 				outp.write( page.title + "\t" + entry + "\n" );
 				out_count++;
@@ -73,7 +79,7 @@ rd.on('line', function(line) {
 		client.getArticle(entry, function(content) {
 			//console.log(content);
 			console.log('Downloaded %s: %s...', entry, content.substr(0, 25).replace(/\n/g, ' '));
-			
+
 			/* parsing out categories */
 			var lines = content.match(/[^\r\n]+/g);
 			//console.log(lines);
@@ -89,7 +95,7 @@ rd.on('line', function(line) {
 			}
 		});
 		in_page_count++;
-	}    
+	}
 }).on('close', function() {
 	console.log('Input processed: %s categories and %s pages from %s', in_cat_count, in_page_count, init_cats);
 	//outp.end();
@@ -101,7 +107,6 @@ rd.on('line', function(line) {
 //   - else: this is a page, retrieve it and parse out categroies
 //   - possibly save only new pages and categories
 // 4. repeat until *.cats file stops growing
-// 5. visualize in graphviz or SOFT from *.pairs file  
+// 5. visualize in graphviz or SOFT from *.pairs file
 
 console.log('finished');
- 

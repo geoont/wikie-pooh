@@ -30,7 +30,7 @@ var bot = require('nodemw');
 var client = new bot({
     server: lang + '.wikipedia.org',  // host name of MediaWiki-powered site
     path: '/w',                  // path to api.php script
-    debug: false                // is more verbose when set to true
+    debug: true                // is more verbose when set to true
 });
 
 var fs = require('fs'),
@@ -78,8 +78,6 @@ rd.on('line', function(line) {
 		});
 		in_cat_count++;
 	} else {
-		if (in_page_count > 0) return;
-		//console.log("getArt");
 		client.getArticle(entry, function(content) {
 			//console.log(content);
 			console.log('Downloaded %s: %s...', entry, content.substr(0, 25).replace(/\n/g, ' '));

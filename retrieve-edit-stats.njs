@@ -73,17 +73,25 @@ rd.on('line', function(line) {
   var first_edit = null, last_edit = null;
 
   getRevisionInfo(myparams, function(revisions) {
-    rev_count += revisions.length;
 
-    if (last_edit == null)
-      last_edit = revisions[0].timestamp;
-    first_edit = revisions[revisions.length - 1].timestamp;
+    if (revisions) {
+      rev_count += revisions.length;
 
-    //all_revisions = all_revisions.concat(revisions);
-  }, function() {
-    outp.write(entry + "\t" + rev_count + "\t" + first_edit + "\t" + last_edit + "\n");
-    console.log("'" + entry + "' revision count: " + rev_count);
-  } );
+      if (last_edit == null)
+        last_edit = revisions[0].timestamp;
+      first_edit = revisions[revisions.length - 1].timestamp;
+    }
+  }, function() { // finalcall function
+
+    if (rev_count > 0) {
+      outp.write(entry + "\t" + rev_count + "\t" + first_edit + "\t" + last_edit + "\n");
+      console.log("'" + entry + "' revision count: " + rev_count);
+    } else {
+      outp.write(entry + "\tPAGE NOT FOUND\n");
+      console.log("'" + entry + "' NOT FOUND");
+    }
+
+  });
 
 });
 
@@ -92,14 +100,14 @@ function getRevisionInfo(params, callback, finalcall) {
 		var pageid = Object.keys(data.query.pages).shift();
 	    //console.log(data); //.query.pages[pageid].revisions);
 
-	    callback(data.query.pages[pageid].revisions);
+	  callback && callback(data.query.pages[pageid].revisions);
 
-	    if (data["query-continue"] && data["query-continue"].revisions) {
-	    	params.rvcontinue = data["query-continue"].revisions.rvcontinue;
-	    	getRevisionInfo(params, callback, finalcall);
-	    } else {
-	    	finalcall && finalcall();
-	    }
+    if (data["query-continue"] && data["query-continue"].revisions) {
+    	params.rvcontinue = data["query-continue"].revisions.rvcontinue;
+    	getRevisionInfo(params, callback, finalcall);
+    } else {
+    	finalcall && finalcall();
+    }
 
 	});
 }

@@ -65,6 +65,7 @@ rd.on('line', function(line) {
   console.log("Processing entry: " + entry);
 
 	if (entry.indexOf('Category:') == 0) {
+
 		var category = entry.replace(/^Category:/, '');
 		console.log("Retrieving category: " + category);
 		client.getPagesInCategory(category, function(pages) {
@@ -77,25 +78,41 @@ rd.on('line', function(line) {
 			});
 		});
 		in_cat_count++;
-	} else {
-		client.getArticle(entry, function(content) {
-			//console.log(content);
-			console.log('Downloaded %s: %s...', entry, content.substr(0, 25).replace(/\n/g, ' '));
 
-			/* parsing out categories */
-			var lines = content.match(/[^\r\n]+/g);
-			//console.log(lines);
-			for( var i = 0; i < lines.length; i++) {
-				//console.log(lines[i]);
-				var re = /\[\[(Category:[^\]]+)\]\]/;
-				var ma = re.exec(lines[i]);
-				if( ma ) {
-					//console.log(lines[i]);
-					//console.log(ma[1]);
-					outp.write( ma[1] + "\t" + entry + "\n");
-				}
-			}
+	} else { // processing of a page (not a category)
+
+    client.api.call({action:'query', titles:entry}, function(info, next, data) {
+
+        /* check if the page exists */
+        var pageid = Object.keys(data.query.pages).shift();
+
+        if (pageid > 1) {
+
+      		client.getArticle(pageid, function(content) {
+      			//console.log(content);
+      			console.log('Downloaded %s (%s): %s...', entry, pageid, content.substr(0, 25).replace(/\n/g, ' '));
+
+      			/* parsing out categories */
+      			var lines = content.match(/[^\r\n]+/g);
+      			//console.log(lines);
+      			for( var i = 0; i < lines.length; i++) {
+      				//console.log(lines[i]);
+      				var re = /\[\[(Category:[^\]]+)\]\]/;
+      				var ma = re.exec(lines[i]);
+      				if( ma ) {
+      					//console.log(lines[i]);
+      					//console.log(ma[1]);
+      					outp.write( ma[1] + "\t" + entry + "\n");
+      				}
+            }
+      		});
+
+        } else { // page not found
+          console.log(entry + "\tPAGE NOT FOUND \n");
+          outp.write( entry + "\tPAGE NOT FOUND\n");
+        }
 		});
+
 		in_page_count++;
 	}
 }).on('close', function() {

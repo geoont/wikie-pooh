@@ -14,5 +14,8 @@
   ],
   "author": "Alex Sorokine and Chen-Chieh Feng",
   "license": "MIT",
-  "readmeFilename": "README.md"
+  "readmeFilename": "README.md",
+  "dependencies" : {
+    "nodemw" : "*"
+  }
 }

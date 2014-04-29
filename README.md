@@ -20,7 +20,7 @@ if any dependencies are missing simply install them with npm install.
  * To retrieve a list of categories and relevant pages run: ```node retrieve-cats.njs en 0.cats``` where en is the language and 0.cats is a file with initial list of pages and categories.  This will produce a new file 1.cats (or higher number) with a list of pages and categories retrieved based on the original list.
  * To get edits stats run ```node retrieve-edit-stats.njs en 0.cats```.
 
-All file are tab-delimited.
+All files are tab-delimited.
 
 ## Developing
 

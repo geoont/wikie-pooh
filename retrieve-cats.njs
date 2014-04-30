@@ -18,7 +18,7 @@ var lang      = args[0],
 var cat_names = {
 	"en" : "Category:",
 	"ru" : "Категория:",
-	"zh" : "Category："
+	"zh" : "Category:"
 	//"zh" : "分类："
 };
 

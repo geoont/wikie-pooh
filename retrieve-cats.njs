@@ -14,6 +14,21 @@ if (args.length != 2) {
 var lang      = args[0],
     init_cats = args[1];
 
+/* list of category names in different languages */
+var cat_names = {
+	"en" : "Category:",
+	"ru" : "Категория:",
+	"zh" : "Category："
+	//"zh" : "分类："
+};
+
+var cat_name = cat_names[lang];
+if (!cat_name) {
+	console.log("No category name for language=" + lang);
+	process.exit(1);
+}
+var cat_re = new RegExp("\\[\\[(" + cat_name + "[^\\]]+)\\]\\]");
+
 /* output file name: bump the number of input file by one */
 var out_cats = init_cats.replace( /(\d+)/, function(match, p1, offset, str) {
   //console.log(match + ", " + p1 + ", " + offset + ", " + str);
@@ -61,12 +76,12 @@ rd.on('line', function(line) {
   line = line.replace(/#.*$/, '');
   if (line.match(/^\s*$/)) return;
 
-	var entry = line.split("\t")[0].trim();
+  var entry = line.split("\t")[0].trim();
   console.log("Processing entry: " + entry);
 
-	if (entry.indexOf('Category:') == 0) {
+	if (entry.indexOf(cat_name) == 0) {
 
-		var category = entry.replace(/^Category:/, '');
+		var category = entry.substring(cat_name.length);
 		console.log("Retrieving category: " + category);
 		client.getPagesInCategory(category, function(pages) {
 			//	client.log('Pages in category');
@@ -88,7 +103,7 @@ rd.on('line', function(line) {
 
         if (pageid > 1) {
 
-      		client.getArticle(pageid, function(content) {
+      		client.getArticle(entry, function(content) {
       			//console.log(content);
       			console.log('Downloaded %s (%s): %s...', entry, pageid, content.substr(0, 25).replace(/\n/g, ' '));
 
@@ -97,8 +112,8 @@ rd.on('line', function(line) {
       			//console.log(lines);
       			for( var i = 0; i < lines.length; i++) {
       				//console.log(lines[i]);
-      				var re = /\[\[(Category:[^\]]+)\]\]/;
-      				var ma = re.exec(lines[i]);
+      				//var re = /\[\[(Category:[^\]]+)\]\]/;
+      				var ma = cat_re.exec(lines[i]);
       				if( ma ) {
       					//console.log(lines[i]);
       					//console.log(ma[1]);

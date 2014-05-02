@@ -5,10 +5,16 @@ Downloader for some Wikipedia articles and related information
 ## Requirements
 
 1.  Download an install node.js from http://nodejs.org/download/
-2.  Install dependencies: ```npm install nodemw```
+2.  Checkout this repository:
+```
+git clone https://$USER@bitbucket.org/sorokine/wikie-pooh.git
+cd wikie-pooh
+```
+2.  Install dependencies: ```npm install nodemw``` (for reliable results this command should be run from the top project directory that contains the file ```package.json```).
 3.  Run tests
 ```
-cd ~/.npm/nodemw/0.3.14/package
+cd node_modules/nodemw/0.3.14/package
+npm install vows
 npm test
 ```
 if any dependencies are missing simply install them with npm install.

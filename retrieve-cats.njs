@@ -27,7 +27,7 @@ if (!cat_name) {
 	console.log("No category name for language=" + lang);
 	process.exit(1);
 }
-var cat_re = new RegExp("\\[\\[(" + cat_name + "[^\\]]+)\\]\\]");
+var cat_re = new RegExp("\\[\\[(" + cat_name + "[^\\]\\|]+)(?:\\|[^\\]]+)?\\]\\]");
 
 /* output file name: bump the number of input file by one */
 var out_cats = init_cats.replace( /(\d+)/, function(match, p1, offset, str) {
@@ -101,7 +101,7 @@ rd.on('line', function(line) {
         /* check if the page exists */
         var pageid = Object.keys(data.query.pages).shift();
 
-        if (pageid > 1) {
+        if (pageid > 1) { // other pageid indicate that the page does not exist or other error
 
       		client.getArticle(entry, function(content) {
       			//console.log(content);

@@ -70,6 +70,7 @@ var out_count = 0;
 outp.on('finish', function() {
 	console.log('Output produced: %s entries into %s', out_count, out_cats);
 } );
+var r_entries = {};
 rd.on('line', function(line) {
 
   /* skip comments and empty lines */
@@ -88,7 +89,11 @@ rd.on('line', function(line) {
 			//	client.logData(pages);
 
 			pages.forEach(function(page) {
-				outp.write( page.title + "\t" + entry + "\n" );
+        if (page.title in r_entries)
+          r_entries[page.title].push(entry)
+        else
+          r_entries[page.title] = [entry];
+				//outp.write( page.title + "\t" + entry + "\n" );
 				out_count++;
 			});
 		});
@@ -115,16 +120,21 @@ rd.on('line', function(line) {
       				//var re = /\[\[(Category:[^\]]+)\]\]/;
       				var ma = cat_re.exec(lines[i]);
       				if( ma ) {
+                if (ma[1] in r_entries)
+                  r_entries[ma[1]].push(entry)
+                else
+                  r_entries[ma[1]] = [entry];
       					//console.log(lines[i]);
       					//console.log(ma[1]);
-      					outp.write( ma[1] + "\t" + entry + "\n");
+      					//outp.write( ma[1] + "\t" + entry + "\n");
       				}
             }
       		});
 
         } else { // page not found
+          r_entries[entry] = ["PAGE NOT FOUND"];
           console.log(entry + "\tPAGE NOT FOUND \n");
-          outp.write( entry + "\tPAGE NOT FOUND\n");
+          //outp.write( entry + "\tPAGE NOT FOUND\n");
         }
 		});
 
@@ -132,6 +142,10 @@ rd.on('line', function(line) {
 	}
 }).on('close', function() {
 	console.log('Input processed: %s categories and %s pages from %s', in_cat_count, in_page_count, init_cats);
+  for (var k in r_entries) {
+    outp.write( k + "\t" + r_entries[k].join() + "\n");
+    console.log( k + "\t" + r_entries[k].join() + "\n");
+  }
 	//outp.end();
 });
 

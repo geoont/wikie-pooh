@@ -10,8 +10,11 @@ Downloader for some Wikipedia articles and related information
 git clone https://$USER@bitbucket.org/sorokine/wikie-pooh.git
 cd wikie-pooh
 ```
-2.  Install dependencies: ```npm install nodemw``` (for reliable results this command should be run from the top project directory that contains the file ```package.json```).
-3.  Run tests
+2.  Install dependencies (this command should be run from the top project directory that contains file ```package.json```): 
+```
+npm install
+``` 
+3.  Optional: run tests for some of the dependencies 
 ```
 cd node_modules/nodemw/0.3.14/package
 npm install vows
@@ -21,12 +24,9 @@ if any dependencies are missing simply install them with npm install.
 
 ## Usage
 
- * To check the examples go to cd ~/.npm/nodemw/0.3.14/package/examples.  
  * To see the content of a Wikipedia page run: ```node retrieve-page.njs zh 山``` (set language and page name accordingly).  
- * To retrieve a list of categories and relevant pages run: ```node retrieve-cats.njs en 0.cats``` where en is the language and 0.cats is a file with initial list of pages and categories.  This will produce a new file 1.cats (or higher number) with a list of pages and categories retrieved based on the original list.
+ * To retrieve a list of categories and relevant pages run: ```node retrieve-cats.njs en 0.cats``` where en is the language and 0.cats is a file with initial list of pages and categories.  This will produce a new file 1.cats (or higher number) with a list of pages and categories retrieved based on the original list.  All files are tab-delimited and can be opened in a spreadsheet.
  * To get edits stats run ```node retrieve-edit-stats.njs en 0.cats```.
-
-All files are tab-delimited.
 
 ## Developing
 

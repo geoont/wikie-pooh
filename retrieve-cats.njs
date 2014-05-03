@@ -40,7 +40,8 @@ if (out_cats == init_cats)
 console.log("language=" + lang + ", init_cats=" + init_cats + ", out_cats=" + out_cats);
 
 var bot = require('nodemw'),
-	fs = require('fs');
+	fs = require('fs'),
+	async = require('async');
 
 // pass configuration object
 var client = new bot({
@@ -59,6 +60,7 @@ var lineReader = require('line-reader');
 var r_entries = {};
 var in_cat_count = 0, in_page_count = 0, out_count = 0;
 
+var input_entries = [];
 lineReader.eachLine(init_cats, function(line, last) {
 
   console.log(line);
@@ -67,9 +69,44 @@ lineReader.eachLine(init_cats, function(line, last) {
   if (line.match(/^\s*$/)) return;
 
   var entry = line.split("\t")[0].trim();
+  input_entries.push(entry);
+
+}).then(function(){
+
+	console.log(input_entries.length + " entries loaded");
+	async.eachSeries(input_entries, process_entry, function(err) {
+	
+		console.log('Input processed: %s categories and %s pages from %s', in_cat_count, in_page_count, init_cats);
+
+		var outp = fs.WriteStream(out_cats);
+		outp.write("#entry\tsource\n");
+	
+		var uniq_count = 0;
+  		for (var k in r_entries) {
+    		outp.write( k + "\t" + r_entries[k].join() + "\n");
+    		//console.log( k + "\t" + r_entries[k].join() + "\n");
+	    	uniq_count++;
+  		}
+  		  		
+		console.log('Output produced: %s unique entries of total %s into %s', out_count, uniq_count, out_cats);
+	});
+});
+
+// 2. manually cleanup the first file from irrelevant categories
+// 3. rerun retrieval program on the cleaned file
+//   - if entry in the file starts with 'Category:' then get its subcatgories and pages
+//   - else: this is a page, retrieve it and parse out categroies
+//   - possibly save only new pages and categories
+// 4. repeat until *.cats file stops growing
+// 5. visualize in graphviz or SOFT from *.pairs file
+
+console.log('finished');
+
+function process_entry(entry, callback) {
   console.log("Processing entry: " + entry);
 
 	if (entry.indexOf(cat_name) == 0) {
+		in_cat_count++;
 
 		var category = entry.substring(cat_name.length);
 		console.log("Retrieving category: " + category);
@@ -77,25 +114,27 @@ lineReader.eachLine(init_cats, function(line, last) {
 			//	client.log('Pages in category');
 			//	client.logData(pages);
 
-			pages.forEach(function(page) {
-        if (page.title in r_entries)
-          r_entries[page.title].push(entry)
-        else
-          r_entries[page.title] = [entry];
-				//outp.write( page.title + "\t" + entry + "\n" );
+			for (var i=0; i<pages.length; i++) {
+		        if (pages[i].title in r_entries)
+		          r_entries[pages[i].title].push(entry)
+		        else
+			      r_entries[pages[i].title] = [entry];
+				  //outp.write( page.title + "\t" + entry + "\n" );
 				out_count++;
-			});
+			}
+			
+			callback && callback();
 		});
-		in_cat_count++;
 
 	} else { // processing of a page (not a category)
 
-    client.api.call({action:'query', titles:entry}, function(info, next, data) {
+	    client.api.call({action:'query', titles:entry}, function(info, next, data) {
 
         /* check if the page exists */
         var pageid = Object.keys(data.query.pages).shift();
 
         if (pageid > 1) { // other pageid indicate that the page does not exist or other error
+			in_page_count++;
 
       		client.getArticle(entry, function(content) {
       			//console.log(content);
@@ -118,40 +157,16 @@ lineReader.eachLine(init_cats, function(line, last) {
       					//outp.write( ma[1] + "\t" + entry + "\n");
       				}
             }
+				callback && callback();
       		});
 
         } else { // page not found
           r_entries[entry] = ["PAGE NOT FOUND"];
           console.log(entry + "\tPAGE NOT FOUND \n");
           //outp.write( entry + "\tPAGE NOT FOUND\n");
+			callback && callback();
         }
 		});
 
-		in_page_count++;
 	}
-
-}).then(function(){
-	console.log('Input processed: %s categories and %s pages from %s', in_cat_count, in_page_count, init_cats);
-
-	var outp = fs.WriteStream(out_cats);
-	outp.write("#entry\tsource\n");
-	
-	var uniq_count = 0;
-  	for (var k in r_entries) {
-    	outp.write( k + "\t" + r_entries[k].join() + "\n");
-    	console.log( k + "\t" + r_entries[k].join() + "\n");
-    	uniq_count++;
-  	}
-  	outp.close();
-	console.log('Output produced: %s unique entries of total %s into %s', out_count, uniq_count, out_cats);
-});
-
-// 2. manually cleanup the first file from irrelevant categories
-// 3. rerun retrieval program on the cleaned file
-//   - if entry in the file starts with 'Category:' then get its subcatgories and pages
-//   - else: this is a page, retrieve it and parse out categroies
-//   - possibly save only new pages and categories
-// 4. repeat until *.cats file stops growing
-// 5. visualize in graphviz or SOFT from *.pairs file
-
-console.log('finished');
+}

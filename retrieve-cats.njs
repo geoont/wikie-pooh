@@ -83,12 +83,13 @@ lineReader.eachLine(init_cats, function(line, last) {
 	
 		var uniq_count = 0;
   		for (var k in r_entries) {
-    		outp.write( k + "\t" + r_entries[k].join() + "\n");
+    		outp.write( k + "\t" + Object.keys(r_entries[k]).join() + "\n");
     		//console.log( k + "\t" + r_entries[k].join() + "\n");
 	    	uniq_count++;
   		}
   		  		
-		console.log('Output produced: %s unique entries of total %s into %s', out_count, uniq_count, out_cats);
+		console.log('Output produced: %s unique entries of total %s into %s', uniq_count, out_count, out_cats);
+		//console.log(r_entries);
 	});
 });
 
@@ -116,9 +117,11 @@ function process_entry(entry, callback) {
 
 			for (var i=0; i<pages.length; i++) {
 		        if (pages[i].title in r_entries)
-		          r_entries[pages[i].title].push(entry)
-		        else
-			      r_entries[pages[i].title] = [entry];
+		          r_entries[pages[i].title][entry]++; // increate count of sources
+		        else {
+			      r_entries[pages[i].title] = {};
+			      r_entries[pages[i].title][entry] = 1;
+			      }
 				  //outp.write( page.title + "\t" + entry + "\n" );
 				out_count++;
 			}
@@ -149,9 +152,12 @@ function process_entry(entry, callback) {
       				var ma = cat_re.exec(lines[i]);
       				if( ma ) {
                 if (ma[1] in r_entries)
-                  r_entries[ma[1]].push(entry)
+                  r_entries[ma[1]][entry]++
                 else
-                  r_entries[ma[1]] = [entry];
+                  {
+			      r_entries[ma[1]] = {};
+			      r_entries[ma[1]][entry] = 1;
+			      }
       					//console.log(lines[i]);
       					//console.log(ma[1]);
       					//outp.write( ma[1] + "\t" + entry + "\n");
@@ -161,7 +167,7 @@ function process_entry(entry, callback) {
       		});
 
         } else { // page not found
-          r_entries[entry] = ["PAGE NOT FOUND"];
+          r_entries[entry] = {"PAGE NOT FOUND" : 1};
           console.log(entry + "\tPAGE NOT FOUND \n");
           //outp.write( entry + "\tPAGE NOT FOUND\n");
 			callback && callback();

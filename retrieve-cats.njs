@@ -39,7 +39,8 @@ if (out_cats == init_cats)
 
 console.log("language=" + lang + ", init_cats=" + init_cats + ", out_cats=" + out_cats);
 
-var bot = require('nodemw');
+var bot = require('nodemw'),
+	fs = require('fs');
 
 // pass configuration object
 var client = new bot({
@@ -48,31 +49,19 @@ var client = new bot({
     debug: true                // is more verbose when set to true
 });
 
-var fs = require('fs'),
-    readline = require('readline');
-
 // 0. Create a file (0.cats) with a seed list of Wikipedia pages with categories from national standards (one for each standard)
 //   - make sure that actual pages exist in Wikipedia
-
-var rd = readline.createInterface({
-    input: fs.createReadStream(init_cats),
-    output: process.stdout,
-    terminal: false
-});
 
 // 1. For each seed page retrieve it and parse out the category list
 //   - fail if a page or category does not exist
 //   - create two files: one with unique pages and categories (1.cats) and the other with page-category pairs (1.pairs)
-var outp = fs.WriteStream(out_cats);
-outp.write("#entry\tsource\n");
-var in_cat_count = 0, in_page_count = 0;
-var out_count = 0;
-outp.on('finish', function() {
-	console.log('Output produced: %s entries into %s', out_count, out_cats);
-} );
+var lineReader = require('line-reader');
 var r_entries = {};
-rd.on('line', function(line) {
+var in_cat_count = 0, in_page_count = 0, out_count = 0;
 
+lineReader.eachLine(init_cats, function(line, last) {
+
+  console.log(line);
   /* skip comments and empty lines */
   line = line.replace(/#.*$/, '');
   if (line.match(/^\s*$/)) return;
@@ -140,13 +129,21 @@ rd.on('line', function(line) {
 
 		in_page_count++;
 	}
-}).on('close', function() {
+
+}).then(function(){
 	console.log('Input processed: %s categories and %s pages from %s', in_cat_count, in_page_count, init_cats);
-  for (var k in r_entries) {
-    outp.write( k + "\t" + r_entries[k].join() + "\n");
-    console.log( k + "\t" + r_entries[k].join() + "\n");
-  }
-	//outp.end();
+
+	var outp = fs.WriteStream(out_cats);
+	outp.write("#entry\tsource\n");
+	
+	var uniq_count = 0;
+  	for (var k in r_entries) {
+    	outp.write( k + "\t" + r_entries[k].join() + "\n");
+    	console.log( k + "\t" + r_entries[k].join() + "\n");
+    	uniq_count++;
+  	}
+  	outp.close();
+	console.log('Output produced: %s unique entries of total %s into %s', out_count, uniq_count, out_cats);
 });
 
 // 2. manually cleanup the first file from irrelevant categories

@@ -16,6 +16,7 @@
   "license": "MIT",
   "readmeFilename": "README.md",
   "dependencies" : {
-    "nodemw" : "*"
+    "nodemw" : "*",
+    "line-reader" : "*"
   }
 }

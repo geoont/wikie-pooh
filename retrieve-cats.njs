@@ -60,7 +60,7 @@ var lineReader = require('line-reader');
 var r_entries = {};
 var in_cat_count = 0, in_page_count = 0, out_count = 0;
 
-var input_entries = [];
+var input_entries = [], ignored_entries = {};
 lineReader.eachLine(init_cats, function(line, last) {
 
   console.log(line);
@@ -69,7 +69,11 @@ lineReader.eachLine(init_cats, function(line, last) {
   if (line.match(/^\s*$/)) return;
 
   var entry = line.split("\t")[0].trim();
-  input_entries.push(entry);
+  
+  if (entry.match(/^-/))
+  	ignored_entries[entry.substring(1)] = 1; 
+  else
+  	input_entries.push(entry);
 
 }).then(function(){
 
@@ -84,10 +88,15 @@ lineReader.eachLine(init_cats, function(line, last) {
 		var keys = Object.keys(r_entries);
 		keys.sort();
   		for (var k in keys) {
-    		outp.write( keys[k] + "\t" + Object.keys(r_entries[keys[k]]).join() + "\n");
+  			if (!(keys[k] in ignored_entries)) 
+    			outp.write( keys[k] + "\t" + Object.keys(r_entries[keys[k]]).join() + "\n");
   		}
+  		
+  		// save ignored
+  		for (k in ignored_entries)
+  			outp.write( "-" + k + "\tIGNORED");
   		  		
-		console.log('Output produced: %s unique entries of total %s into %s', r_entries.length, out_count, out_cats);
+		console.log('Output produced: %s unique entries of total %s into %s', keys.length, out_count, out_cats);
 		//console.log(r_entries);
 	});
 });
@@ -103,7 +112,13 @@ lineReader.eachLine(init_cats, function(line, last) {
 console.log('finished');
 
 function process_entry(entry, callback) {
-  console.log("Processing entry: " + entry);
+
+	if (entry in ignored_entries) {
+		console.log("Skipped entry: " + entry);
+		callback && callback();
+		return;
+	}
+  	console.log("Processing entry: " + entry);
 
 	if (entry.indexOf(cat_name) == 0) {
 		in_cat_count++;

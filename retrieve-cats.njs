@@ -81,14 +81,13 @@ lineReader.eachLine(init_cats, function(line, last) {
 		var outp = fs.WriteStream(out_cats);
 		outp.write("#entry\tsource\n");
 	
-		var uniq_count = 0;
-  		for (var k in r_entries) {
-    		outp.write( k + "\t" + Object.keys(r_entries[k]).join() + "\n");
-    		//console.log( k + "\t" + r_entries[k].join() + "\n");
-	    	uniq_count++;
+		var keys = Object.keys(r_entries);
+		keys.sort();
+  		for (var k in keys) {
+    		outp.write( keys[k] + "\t" + Object.keys(r_entries[keys[k]]).join() + "\n");
   		}
   		  		
-		console.log('Output produced: %s unique entries of total %s into %s', uniq_count, out_count, out_cats);
+		console.log('Output produced: %s unique entries of total %s into %s', r_entries.length, out_count, out_cats);
 		//console.log(r_entries);
 	});
 });

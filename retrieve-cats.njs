@@ -92,7 +92,7 @@ lineReader.eachLine(init_cats, function(line, last) {
     			outp.write( keys[k] + "\t" + Object.keys(r_entries[keys[k]]).join() + "\n");
   		}
   		
-  		// save ignored
+  		// save ignored entries
   		for (k in ignored_entries)
   			outp.write( "-" + k + "\tIGNORED");
   		  		

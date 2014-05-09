@@ -69,9 +69,9 @@ lineReader.eachLine(init_cats, function(line, last) {
   if (line.match(/^\s*$/)) return;
 
   var entry = line.split("\t")[0].trim();
-  
+
   if (entry.match(/^-/))
-  	ignored_entries[entry.substring(1)] = 1; 
+  	ignored_entries[entry.substring(1)] = 1;
   else
   	input_entries.push(entry);
 
@@ -79,23 +79,26 @@ lineReader.eachLine(init_cats, function(line, last) {
 
 	console.log(input_entries.length + " entries loaded");
 	async.eachSeries(input_entries, process_entry, function(err) {
-	
+
 		console.log('Input processed: %s categories and %s pages from %s', in_cat_count, in_page_count, init_cats);
 
 		var outp = fs.WriteStream(out_cats);
 		outp.write("#entry\tsource\n");
-	
+
 		var keys = Object.keys(r_entries);
 		keys.sort();
   		for (var k in keys) {
-  			if (!(keys[k] in ignored_entries)) 
-    			outp.write( keys[k] + "\t" + Object.keys(r_entries[keys[k]]).join() + "\n");
+  			if (!(keys[k] in ignored_entries)) {
+          var sources = Object.keys(r_entries[keys[k]]).join();
+          var prefix = (sources == "PAGE NOT FOUND") ? '-' : '';
+    			outp.write( prefix + keys[k] + "\t" + sources + "\n");
+        }
   		}
   		
   		// save ignored entries
   		for (k in ignored_entries)
-  			outp.write( "-" + k + "\tIGNORED");
-  		  		
+  			outp.write( "-" + k + "\tIGNORED\n");
+
 		console.log('Output produced: %s unique entries of total %s into %s', keys.length, out_count, out_cats);
 		//console.log(r_entries);
 	});
@@ -139,7 +142,7 @@ function process_entry(entry, callback) {
 				  //outp.write( page.title + "\t" + entry + "\n" );
 				out_count++;
 			}
-			
+
 			callback && callback();
 		});
 

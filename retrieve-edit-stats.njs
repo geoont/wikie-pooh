@@ -48,8 +48,9 @@ var outp = fs.WriteStream(outp);
 outp.write("#page\tedits\tfirst_edit\tlast_edit\n");
 rd.on('line', function(line) {
 
-  /* skip comments and empty lines */
+  /* skip ignored entries, comments and empty lines */
   line = line.replace(/#.*$/, '');
+  line = line.replace(/-.*$/, '');
   if (line.match(/^\s*$/)) return;
 
   var entry = line.split("\t")[0].trim();

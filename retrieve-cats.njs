@@ -175,6 +175,7 @@ function process_entry(entry, callback) {
 			      r_entries[ma[1]] = {};
 			      r_entries[ma[1]][entry] = 1;
 			      }
+			      out_count++;
       					//console.log(lines[i]);
       					//console.log(ma[1]);
       					//outp.write( ma[1] + "\t" + entry + "\n");

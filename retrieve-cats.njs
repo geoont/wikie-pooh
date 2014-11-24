@@ -84,20 +84,30 @@ lineReader.eachLine(init_cats, function(line, last) {
 
 		var outp = fs.WriteStream(out_cats);
 		outp.write("#entry\tsource\n");
+		
+		var outhtml = fs.WriteStream(out_cats + ".html");
+		outhtml.write("<html><head><title>Categories from " + 
+			out_cats + " for language " + lang + 
+			"</title></head><body><h1>" + 
+			out_cats + " for language " + lang + 
+			"</h1><table border=1><tr><th>Flg</th><th>Entry</th><th>Source</th></tr>\n");
 
 		var keys = Object.keys(r_entries);
 		keys.sort();
   		for (var k in keys) {
   			if (!(keys[k] in ignored_entries)) {
-          var sources = Object.keys(r_entries[keys[k]]).join();
-          var prefix = (sources == "PAGE NOT FOUND") ? '-' : '';
+          		var sources = Object.keys(r_entries[keys[k]]).join();
+          		var prefix = (sources == "PAGE NOT FOUND") ? '-' : '';
     			outp.write( prefix + keys[k] + "\t" + sources + "\n");
-        }
+    			outhtml.write("<tr><td>" + prefix + "</td><td>" + keys[k] + "</td><td>" + sources + "</td></tr>\n"); 
+        	}
   		}
   		
   		// save ignored entries
-  		for (k in ignored_entries)
+  		for (k in ignored_entries) {
   			outp.write( "-" + k + "\tIGNORED\n");
+    			outhtml.write("<tr><td>-</td><td>" + k + "</td><td>IGNORED</td></tr>\n"); 
+  		}
 
 		console.log('Output produced: %s unique entries of total %s into %s', keys.length, out_count, out_cats);
 		//console.log(r_entries);

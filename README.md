@@ -26,7 +26,7 @@ if any dependencies are missing simply install them with npm install.
 
  * To see the content of a Wikipedia page run: ```node retrieve-page.njs zh 山``` (set language and page name accordingly).  
  * To retrieve a list of categories and relevant pages run: ```node retrieve-cats.njs en 0.cats``` where en is the language and 0.cats is a file with initial list of pages and categories.  This will produce a new file 1.cats (or higher number) with a list of pages and categories retrieved based on the original list.  All files are tab-delimited and can be opened in a spreadsheet.
-  * output file can be edited to remove irrelevant entries which can be either commented out using # symbol or placed on the ignore list by entering dash in into the first column
+  * output file can be edited to remove irrelevant entries which can be either commented out using # symbol or placed on the ignore list by entering dash (```-```) in into the first column
   * the list of ignored entries will be added to the end of output file 
  * To get edits stats run ```node retrieve-edit-stats.njs en 0.cats```.
 

@@ -7,7 +7,7 @@ Downloader for some Wikipedia articles and related information
 1.  Download an install node.js from http://nodejs.org/download/
 2.  Checkout this repository:
 ```
-git clone https://$USER@bitbucket.org/sorokine/wikie-pooh.git
+git clone https://github.com/geoont/wikie-pooh.git
 cd wikie-pooh
 ```
 2.  Install dependencies (this command should be run from the top project directory that contains file ```package.json```): 

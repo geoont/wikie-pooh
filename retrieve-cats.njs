@@ -33,7 +33,7 @@ var cat_re = new RegExp("\\[\\[(" + cat_name + "[^\\]\\|]+)(?:\\|[^\\]]+)?\\]\\]
 var out_cats = init_cats.replace( /(\d+)/, function(match, p1, offset, str) {
   //console.log(match + ", " + p1 + ", " + offset + ", " + str);
   return parseInt(p1) + 1;
-});
+}).replace(/-edited/, ''); /* removed the word 'edited' if it was there */
 if (out_cats == init_cats)
   out_cats = "out.cats";
 
@@ -96,10 +96,20 @@ lineReader.eachLine(init_cats, function(line, last) {
 		keys.sort();
   		for (var k in keys) {
   			if (!(keys[k] in ignored_entries)) {
-          		var sources = Object.keys(r_entries[keys[k]]).join();
-          		var prefix = (sources == "PAGE NOT FOUND") ? '-' : '';
+          		var prefix = '';
+          		var sources = Object.keys(r_entries[keys[k]]);
+          		var sources_html = sources.map(function(s){
+          			if (s == "PAGE NOT FOUND") {
+          				prefix = '-';
+          				return s;
+          			} else { 
+          				return '<a href="http://en.wikipedia.org/wiki/' + s + '">' + s + '</a>';
+          			} 
+          		}).join();
     			outp.write( prefix + keys[k] + "\t" + sources + "\n");
-    			outhtml.write("<tr><td>" + prefix + "</td><td>" + keys[k] + "</td><td>" + sources + "</td></tr>\n"); 
+    			outhtml.write("<tr><td>" + prefix + 
+    				'</td><td><a href="http://en.wikipedia.org/wiki/' + keys[k] + '">' + keys[k] + 
+    				'</a></td><td>' + sources_html + "</td></tr>\n"); 
         	}
   		}
   		
@@ -110,6 +120,7 @@ lineReader.eachLine(init_cats, function(line, last) {
   		}
 
 		console.log('Output produced: %s unique entries of total %s into %s', keys.length, out_count, out_cats);
+		//console.log(">>>>>>>\n");
 		//console.log(r_entries);
 	});
 });
@@ -144,12 +155,12 @@ function process_entry(entry, callback) {
 
 			for (var i=0; i<pages.length; i++) {
 		        if (pages[i].title in r_entries)
-		          r_entries[pages[i].title][entry]++; // increate count of sources
+		        	r_entries[pages[i].title][entry]++; // increment count of sources
 		        else {
-			      r_entries[pages[i].title] = {};
-			      r_entries[pages[i].title][entry] = 1;
-			      }
-				  //outp.write( page.title + "\t" + entry + "\n" );
+				    r_entries[pages[i].title] = {};
+				    r_entries[pages[i].title][entry] = 1;
+			    }
+				//outp.write( page.title + "\t" + entry + "\n" );
 				out_count++;
 			}
 
@@ -178,19 +189,18 @@ function process_entry(entry, callback) {
       				//var re = /\[\[(Category:[^\]]+)\]\]/;
       				var ma = cat_re.exec(lines[i]);
       				if( ma ) {
-                if (ma[1] in r_entries)
-                  r_entries[ma[1]][entry]++
-                else
-                  {
-			      r_entries[ma[1]] = {};
-			      r_entries[ma[1]][entry] = 1;
-			      }
-			      out_count++;
-      					//console.log(lines[i]);
-      					//console.log(ma[1]);
-      					//outp.write( ma[1] + "\t" + entry + "\n");
-      				}
-            }
+		                if (ma[1] in r_entries)
+		                  r_entries[ma[1]][entry]++
+		                else {
+					      r_entries[ma[1]] = {};
+					      r_entries[ma[1]][entry] = 1;
+					    }
+					    out_count++;
+  						//console.log(lines[i]);
+  						//console.log(ma[1]);
+  						//outp.write( ma[1] + "\t" + entry + "\n");
+  					}
+            	}
 				callback && callback();
       		});
 

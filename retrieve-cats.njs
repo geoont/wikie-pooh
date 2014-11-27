@@ -43,9 +43,12 @@ var bot = require('nodemw'),
 	fs = require('fs'),
 	async = require('async');
 
+var wiki_srv = lang + '.wikipedia.org';
+var wiki_uri = 'http://' + wiki_srv + '/wiki/';
+ 
 // pass configuration object
 var client = new bot({
-    server: lang + '.wikipedia.org',  // host name of MediaWiki-powered site
+    server: wiki_srv,  // host name of MediaWiki-powered site
     path: '/w',                  // path to api.php script
     debug: true                // is more verbose when set to true
 });
@@ -105,12 +108,12 @@ lineReader.eachLine(init_cats, function(line, last) {
           				prefix = '-';
           				return s;
           			} else { 
-          				return '<a href="http://en.wikipedia.org/wiki/' + s + '">' + s + '</a>';
+          				return '<a href="' + wiki_uri + s + '">' + s + '</a>';
           			} 
           		}).join();
     			outp.write( prefix + keys[k] + "\t" + sources + "\n");
     			outhtml.write("<tr><td>" + prefix + 
-    				'</td><td><a href="http://en.wikipedia.org/wiki/' + keys[k] + '">' + keys[k] + 
+    				'</td><td><a href="' + wiki_uri + keys[k] + '">' + keys[k] + 
     				'</a></td><td>' + sources_html + "</td></tr>\n"); 
         	}
   		}

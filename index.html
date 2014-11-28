@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <link rel="icon" href="favicon.ico">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        
+        <title>Wikie-Pooh</title>
+        <script src = "/socket.io/socket.io.js"> </script>
+        
+        <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0/handlebars.js"></script>
+        <script type=text/javascript src="//code.jquery.com/jquery-2.1.1.min.js"></script>
+        
+        <!-- Latest compiled and minified CSS -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
+        
+        <!-- Optional theme -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap-theme.min.css">
+        
+        <!-- Latest compiled and minified JavaScript -->
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
+
+        <script id="entries-template" type="x-handlebars-template">
+            <table border="1" class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Flg</th>
+                    <th>Entry</th>
+                    <th>Reason</th>
+                    <th>Sources</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#this}}
+                    <tr>
+                        <td>{{flag}}</td>
+                        <td>{{entry}}</td>
+                        <td>{{reason}}</td>
+                        <td>{{#sources}}{{src}} ({{cnt}}) {{/sources}}</td>
+                    </tr>
+                {{/this}}
+            </tbody>
+            </table>
+        </script>
+
+        <script>
+        
+            var entriesTemplateScript = $("#entries-template").html(); 
+            var entriesTemplate = Handlebars.compile (entriesTemplateScript); 
+
+            var socket = io.connect();
+            
+            socket.on("entryList", showTimeStatus);
+            function showTimeStatus(msg) {
+                $("#entryTable").html(entriesTemplate(msg));
+            }
+            socket.emit('getEntryList');
+        </script>
+    </head>
+    
+    <body role="document">
+
+    <!-- Fixed navbar -->
+    <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">Wikie-Pooh</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li class="active"><a href="#">Home</a></li>
+            <li><a href="#status">Status</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </nav>
+    
+    <div class="container theme-showcase" role="main">
+    
+        <div class="page-header">
+            <h2 id="entries">List of Entries</h2>
+        </div>
+        
+        <div id="entryTable"> - </div>
+
+    </div>
+    </body>
+</html>

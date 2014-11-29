@@ -26,7 +26,7 @@ if (fs.existsSync(dbfile)) {
 
 /* create database tables */
 var sqlite3 = require('sqlite3').verbose();
-console.log("Creating database: " + dbfile + "\n");
+console.log("Creating database: " + dbfile);
 var db = new sqlite3.Database(dbfile, sqlite3.OPEN_CREATE | sqlite3.OPEN_READWRITE, function(err) {
 	if (err) console.error('Failed: ' + err);
 });
@@ -40,7 +40,9 @@ db.serialize(function() {
 var stmt = db.prepare("INSERT INTO stages (action, stage, entry) VALUES (?, 0, ?)");
 
 var lineReader = require('line-reader');
+var lines_read = 0, entries_inserted = 0;
 
+console.log("Reading category list...");
 lineReader.eachLine(init_cats, function(line, last) {
 
   //console.log(line);
@@ -57,12 +59,15 @@ lineReader.eachLine(init_cats, function(line, last) {
   	entry = entry.substring(1);
   }
 
+  lines_read++;
+  
   stmt.run(action, entry, function(err) {
-	  if (last) {
+	  ++entries_inserted;
+	  if (last && entries_inserted == lines_read) {
 		  stmt.finalize();
 		  
 		  db.each("SELECT count(*) AS cnt FROM stages", function(err, row) {
-			  console.log("Entries loaded: " + row.cnt);
+			  console.log("Finished: read=" + lines_read + " inserted=" + entries_inserted + " table_rows=" + row.cnt);
 		  });
 		  
 		  db.close();

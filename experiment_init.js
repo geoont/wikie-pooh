@@ -33,17 +33,41 @@ var db = new sqlite3.Database(dbfile, sqlite3.OPEN_CREATE | sqlite3.OPEN_READWRI
 
 db.serialize(function() {
   db.run("CREATE TABLE stages (stage INT, action CHAR(1), entry TEXT, src_stage INT, src_entry TEXT, PRIMARY KEY (stage, entry))");
-
-  var stmt = db.prepare("INSERT INTO stages (action, stage, entry) VALUES (?, 0, ?)");
-  for (var i = 0; i < 10; i++) {
-      stmt.run(null, "e" + i);
-  }
-  stmt.finalize();
-
-  db.each("SELECT count(*) AS cnt FROM stages", function(err, row) {
-      console.log("Entries loaded: " + row.cnt);
-  });
+  db.run("CREATE TABLE entries (entry TEXT PRIMARY KEY, edits INT, wiki_version INT, content TEXT)");
 });
 
-db.close();
 /* load cats file into the database */
+var stmt = db.prepare("INSERT INTO stages (action, stage, entry) VALUES (?, 0, ?)");
+
+var lineReader = require('line-reader');
+
+lineReader.eachLine(init_cats, function(line, last) {
+
+  //console.log(line);
+  
+  /* skip comments and empty lines */
+  line = line.replace(/#.*$/, '');
+  if (line.match(/^\s*$/)) return;
+
+  var entry = line.split("\t")[0].trim();
+
+  var action = null;
+  if (entry.match(/^-/)) {
+	action = '-';
+  	entry = entry.substring(1);
+  }
+
+  stmt.run(action, entry, function(err) {
+	  if (last) {
+		  stmt.finalize();
+		  
+		  db.each("SELECT count(*) AS cnt FROM stages", function(err, row) {
+			  console.log("Entries loaded: " + row.cnt);
+		  });
+		  
+		  db.close();
+	  }
+  });
+})
+
+

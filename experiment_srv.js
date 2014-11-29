@@ -3,8 +3,42 @@
  */
 
 /* process arguments */
+'use strict';
+
+var args = process.argv.slice(2);
+if (args.length != 2) {
+	console.error("usage: node " + process.argv[1] + " <language> <input_list.cats>\n" +
+		"  where\n    <language> is Wikipedia language code (en, zh, ru, etc.)\n" +
+		"    <expertiment.sqlite3> sqlite 3 database to be created\n") ;
+	process.exit(1);
+}
+
+var lang   = args[0],
+    dbfile = args[1];
+
+/* list of category names in different languages */
+var cat_names = {
+	"en" : "Category:",
+	"ru" : "Категория:",
+	"zh" : "Category:"
+	//"zh" : "分类："
+};
+
+var cat_name = cat_names[lang];
+if (!cat_name) {
+	console.log("No category name for language=" + lang);
+	process.exit(1);
+}
 
 /* open the database */
+var sqlite3 = require('sqlite3').verbose();
+console.log("Opening database: " + dbfile);
+var db = new sqlite3.Database(dbfile, sqlite3.OPEN_READWRITE, function(err) {
+	if (err) {
+		console.error('Failed: ' + err);
+		process.exit(2);
+	}
+});
 
 /* launch the main server */
 var srv_port = 8282;
@@ -31,10 +65,11 @@ function onConnect(socket) {
     soc = socket;
 }
 
-var entryList =  [{'flag' : ' ', 'entry' : 'entry1', 'reason' : 'xxx', 'sources' : [ {'src' : 'Page', 'url' : 'http:', 'cnt' : 1} ]}];
 function handleEntryListRequest() {
-    //console.log('Entry list request, sending ' + entryList);
-    soc.emit('entryList', entryList );
+	//console.log('Entry list request, sending ' + entryList);
+	db.all("SELECT * FROM stages", function(err, rows) {
+		soc.emit('entryList', rows );
+	});
 }
 
 console.log("Open in your browser: http://localhost:" + srv_port);

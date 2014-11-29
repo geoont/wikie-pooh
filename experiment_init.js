@@ -28,7 +28,10 @@ if (fs.existsSync(dbfile)) {
 var sqlite3 = require('sqlite3').verbose();
 console.log("Creating database: " + dbfile);
 var db = new sqlite3.Database(dbfile, sqlite3.OPEN_CREATE | sqlite3.OPEN_READWRITE, function(err) {
-	if (err) console.error('Failed: ' + err);
+	if (err) {
+		console.error('Failed: ' + err);
+		process.exit(2);
+	}
 });
 
 db.serialize(function() {

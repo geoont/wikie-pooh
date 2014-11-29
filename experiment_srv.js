@@ -17,6 +17,7 @@ var serve = serveStatic('.', {'index': ['index.html', 'index.htm']})
 
 /* Create server */
 var server = http.createServer(function(req, res){
+  console.log('HTTP request: ' + req.url);
   var done = finalhandler(req, res)
   serve(req, res, done)
 })
@@ -26,7 +27,7 @@ io.sockets.on('connection', onConnect);
 
 var soc;
 function onConnect(socket) {
-    socket.on('getEntryList',         handleEntryListRequest);
+    socket.on('getEntryList', handleEntryListRequest);
     soc = socket;
 }
 

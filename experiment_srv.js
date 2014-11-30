@@ -35,7 +35,7 @@ var sqlite3 = require('sqlite3').verbose();
 console.log("Opening database: " + dbfile);
 var db = new sqlite3.Database(dbfile, sqlite3.OPEN_READWRITE, function(err) {
 	if (err) {
-		console.error('Failed: ' + err);
+		console.error('Unable to connect to database: ' + err);
 		process.exit(2);
 	}
 });
@@ -67,7 +67,7 @@ function onConnect(socket) {
 
 function handleEntryListRequest() {
 	//console.log('Entry list request, sending ' + entryList);
-	db.all("SELECT * FROM stages", function(err, rows) {
+	db.all("SELECT * FROM entries", function(err, rows) {
 		soc.emit('entryList', rows );
 	});
 }

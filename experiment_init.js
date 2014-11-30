@@ -35,15 +35,42 @@ var db = new sqlite3.Database(dbfile, sqlite3.OPEN_CREATE | sqlite3.OPEN_READWRI
 });
 
 db.serialize(function() {
-  db.run("CREATE TABLE stages (stage INT, action CHAR(1), entry TEXT, src_stage INT, src_entry TEXT, PRIMARY KEY (stage, entry))");
-  db.run("CREATE TABLE entries (entry TEXT PRIMARY KEY, edits INT, wiki_version INT, content TEXT)");
+	db.run("CREATE TABLE entries (" +
+			"entry TEXT PRIMARY KEY, " +
+			"edits INT, " +
+			"wiki_version INT, " +
+			"content TEXT, " +
+			"comment TEXT" +
+			")");
+	db.run("CREATE TABLE cat_src (" +
+			"entry TEXT, " +
+			"src_entry TEXT, " +
+			"PRIMARY KEY (entry, src_entry), " +
+			"FOREIGN KEY (entry) REFERENCES entries(entry)" +
+			"FOREIGN KEY (src_entry) REFERENCES cat_src(entry)" +
+			")");
 });
 
 /* load cats file into the database */
-var stmt = db.prepare("INSERT INTO stages (action, stage, entry) VALUES (?, 0, ?)");
+var stmt1 = db.prepare("INSERT INTO entries (entry, comment) VALUES (?, ?)");
+var stmt2 = db.prepare("INSERT INTO cat_src (entry, src_entry) VALUES (?, '')");
 
 var lineReader = require('line-reader');
 var lines_read = 0, entries_inserted = 0;
+var readline_complete = false;
+
+function complete_loading() {
+	if (readline_complete && entries_inserted == lines_read) {
+		stmt1.finalize();
+		stmt2.finalize();
+	  
+		db.each("SELECT count(*) AS cnt FROM entries", function(err, row) {
+			console.log("Finished: read=" + lines_read + " inserted=" + entries_inserted + " table_rows=" + row.cnt);
+		});
+	
+		db.close();
+	}
+}
 
 console.log("Reading category list...");
 lineReader.eachLine(init_cats, function(line, last) {
@@ -56,26 +83,24 @@ lineReader.eachLine(init_cats, function(line, last) {
 
   var entry = line.split("\t")[0].trim();
 
-  var action = null;
+  var comment = '';
   if (entry.match(/^-/)) {
-	action = '-';
+	comment = 'ignore';
   	entry = entry.substring(1);
   }
 
   lines_read++;
   
-  stmt.run(action, entry, function(err) {
+  stmt1.run(entry, comment, function() { 
 	  ++entries_inserted;
-	  if (last && entries_inserted == lines_read) {
-		  stmt.finalize();
-		  
-		  db.each("SELECT count(*) AS cnt FROM stages", function(err, row) {
-			  console.log("Finished: read=" + lines_read + " inserted=" + entries_inserted + " table_rows=" + row.cnt);
-		  });
-		  
-		  db.close();
-	  }
+	  if (comment != '')
+		  stmt2.run(entry);
+	  complete_loading();
   });
-})
+}).then(function() {
+	readline_complete = true;
+	complete_loading();
+});
+
 
 

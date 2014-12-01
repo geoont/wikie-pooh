@@ -21,24 +21,28 @@
         <!-- Latest compiled and minified JavaScript -->
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
 
+        <script id="entry-template" type="x-handlebars-template">
+	        <tr id="{{entry}}" class="entry">
+				<td>{{entry}}</td>
+				<td>{{#sources}}{{src}} ({{cnt}}) {{/sources}}</td>
+				<td>{{heirs}}</td>
+				<td>{{comment}}</td>
+			</tr>
+        </script>
+        
         <script id="entries-template" type="x-handlebars-template">
             <table border="1" class="table table-bordered">
             <thead>
                 <tr>
-                    <th>Flg</th>
                     <th>Entry</th>
-                    <th>Reason</th>
                     <th>Sources</th>
+                    <th>Heirs</th>
+                    <th>Comment</th>
                 </tr>
             </thead>
             <tbody>
                 {{#this}}
-                    <tr>
-                        <td>{{flag}}</td>
-                        <td>{{entry}}</td>
-                        <td>{{reason}}</td>
-                        <td>{{#sources}}{{src}} ({{cnt}}) {{/sources}}</td>
-                    </tr>
+					{{> entry}}
                 {{/this}}
             </tbody>
             </table>
@@ -48,7 +52,8 @@
         
             var entriesTemplateScript = $("#entries-template").html(); 
             var entriesTemplate = Handlebars.compile (entriesTemplateScript); 
-
+            Handlebars.registerPartial("entry", $("#entry-template").html());
+            
             var socket = io.connect();
             
             socket.on("entryList", showTimeStatus);

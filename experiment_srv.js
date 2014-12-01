@@ -67,15 +67,18 @@ function onConnect(socket) {
 
 function handleEntryListRequest() {
 	//console.log('Entry list request, sending ' + entryList);
-	db.all("SELECT * FROM entries", function(err, rows) {
-		soc.emit('entryList', rows );
+	var entry_list = [];
+	db.each("SELECT * FROM entries", function(err, row) {
+		entry_list.push( row );
+	}, function (err, row_cnt) {
+		soc.emit('entryList', entry_list );		
 	});
 }
 
 console.log("Open in your browser: http://localhost:" + srv_port);
 server.listen(srv_port);
 
-/* launch sevlets for specific functions */
+/* launch servlets for specific functions */
 
 /*** SERVLETS ***/
 

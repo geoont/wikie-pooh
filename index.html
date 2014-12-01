@@ -24,13 +24,13 @@
         <script id="entry-template" type="x-handlebars-template">
 	        <tr id="{{entry}}" class="entry">
 				<td>
-					{{entry}}
+					<a href="{{entry}}">{{entry}}</a>
 					<div style="float: right; clear: right; margin: 10px;">
 						<button type="button" class="btn btn-xs btn-default" id="btn-load-{{entry}}" onClick="socket.emit('loadEntry', '{{entry}}')">Load</button>
 						<button type="button" class="btn btn-xs btn-default" id="btn-parse-{{entry}}" onClick="socket.emit('parseEntry', '{{entry}}')">Parse</button>
 					</div>
 				</td>
-				<td>{{#sources}}{{this}} {{/sources}}</td>
+				<td>{{#sources}}<a href="{{this}}">{{this}}</a> {{/sources}}</td>
 				<td>{{heirs}}</td>
 				<td>{{comment}}</td>
 			</tr>
@@ -55,7 +55,9 @@
         </script>
 
         <script id="pgtitle-template" type="x-handlebars-template">
-			File: {{name}} Lang: <strong>{{lang}}</strong> entries: <strong>{{entry_count}}</strong>
+			File: <strong>{{name}}</strong> 
+			Lang: <strong>{{lang}}</strong> 
+			entries: <strong>{{entry_count}}</strong>
         </script>
         
         <script>
@@ -71,19 +73,21 @@
             
             var socket = io.connect();
             
+            socket.on("pgtitle", showPgtitle);
             socket.on("entryList", showEntryList);
+     	   
             function showEntryList(msg) {
                 $("#entryTable").html(entriesTemplate(msg));
             }
-            socket.emit('getEntryList');
 
-            socket.on("pgtitle", showPgtitle);
             function showPgtitle(msg) {
             	expInfo = msg;
                 $("#pgtitle").html(pgtitleTemplate(msg));
+                
+	            socket.emit('getEntryList');
             }
+            
             socket.emit('getPgtitle');
-
         </script>
     </head>
     

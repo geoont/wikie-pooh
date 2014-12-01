@@ -30,6 +30,9 @@ if (!cat_name) {
 	process.exit(1);
 }
 
+var wiki_srv = lang + '.wikipedia.org';
+var wiki_uri = 'http://' + wiki_srv + '/wiki/';
+
 /* open the database */
 var sqlite3 = require('sqlite3').verbose();
 console.log("Opening database: " + dbfile);
@@ -108,7 +111,9 @@ function handlePgtitleRequest() {
 		soc.emit('pgtitle', { 
 			'name' : dbfile, 
 			'lang' : lang, 
-			'entry_count' : (row ? row.cnt : 0)
+			'entry_count' : (row ? row.cnt : 0),
+			'srv' : wiki_srv,
+			'uri' : wiki_uri
 		})
 	});
 }

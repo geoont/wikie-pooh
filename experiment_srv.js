@@ -80,6 +80,7 @@ function onConnect(socket) {
     socket.on('getPgtitle', handlePgtitleRequest);
     socket.on('loadEntry', handleLoadEntry);
     socket.on('parseEntry', handleParseEntry);
+    socket.on('updateComment', handleUpdateComment);
     soc = socket;
 }
 
@@ -187,6 +188,12 @@ function handleLoadEntry(entry) {
         }
         
 	});
+}
+
+var updcom_stmt = db.prepare("UPDATE entries SET comment = ? WHERE entry = ?");
+function handleUpdateComment(msg) {
+	console.log(msg);
+	updcom_stmt.run(msg.comment, msg.entry);
 }
 
 /**

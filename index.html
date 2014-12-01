@@ -59,7 +59,7 @@
 			<td>{{#if not_found}}<font color="red">not found</font> ({{pageid}}){{else}}{{pageid}}{{/if}}</td>
 			<td>{{#sources}}{{link this}} {{/sources}}</td>
 			<td>{{heirs}}</td>
-			<td>{{comment}}</td>
+			<td><textarea id="comment-{{clean_id}}" class="form-control" rows="2" onkeydown="commentKeyEvent(event, '{{entry}}')">{{comment}}</textarea></td>
         </script>
         
         <script id="entries-template" type="x-handlebars-template">
@@ -70,7 +70,7 @@
                     <th>Entry</th>
                     <th>PageId</th>
                     <th>Sources</th>
-                    <th>Heirs</th>
+                    <th>#cats</th>
                     <th>Comment</th>
                 </tr>
             </thead>
@@ -181,6 +181,20 @@
             			
             		$("#content-" + entryMap[entry].clean_id).html(entryMap[entry].content.substring(0, entryMap[entry].content_sz) + elps); 	
             	}	
+            }
+            
+            function commentKeyEvent(event, entry_name) {
+            	var el = $('#comment-' + entryMap[entry_name].clean_id);
+            	if (event.keyCode == 13) /* enter pressed */ {
+            		/* change bg color to green */
+            		el.css('background-color' , '#00FF00');
+            		
+            		/* send comment to server */
+            		socket.emit('updateComment', { 'entry' : entry_name, 'comment' : el.val() });
+            	} else {
+            		/* set backgorund to red */
+            		el.css('background-color' , '#FF0000');
+            	}
             }
         </script>
     </head>

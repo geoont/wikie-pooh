@@ -63,7 +63,18 @@ var soc;
 function onConnect(socket) {
     socket.on('getEntryList', handleEntryListRequest);
     socket.on('getPgtitle', handlePgtitleRequest);
+    socket.on('loadEntry', handleLoadEntry);
+    socket.on('parseEntry', handleParseEntry);
     soc = socket;
+}
+
+function handleLoadEntry(entry) {
+	console.log('load request for ' + msg);
+	soc.emit("updateEntry", entry);
+}
+
+function handleParseEntry(entry) {
+	console.log('parse request for ' + msg);
 }
 
 var ents_stmt = db.prepare("SELECT * FROM entries");

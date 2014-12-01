@@ -201,8 +201,52 @@ function handleUpdateComment(msg) {
  * 
  * @param entry the name of the entry
  */
-function handleParseEntry(entry) {
-	console.log('parse request for ' + entry);
+var getcont_stmt = db.prepare("SELECT content, link_count FROM entries WHERE entry = ?");
+var updlnk_stmt = db.prepare("UPDATE entries SET link_count = ? WHERE entry = ?");
+var newent_stmt = db.prepare("INSERT INTO entries (entry) VALUES (?)");
+var newsrc_stmt = db.prepare("INSERT INTO cat_src (entry, src_entry) VALUES (?, ?)");
+var cat_re = new RegExp("\\[\\[(" + cat_name + "[^\\]\\|]+)(?:\\|[^\\]]+)?\\]\\]");
+function handleParseEntry(entry_name) {
+	console.log('parse request for ' + entry_name);
+	var foundcat_count = 0;
+	
+	/* retrieve page content from database */
+	getcont_stmt.get(entry_name, function(err, row) {
+
+		/* parsing out categories */
+		var lines = row.content.match(/[^\r\n]+/g);
+		
+		//console.log(lines);
+		for( var i = 0; i < lines.length; i++) {
+			//console.log(lines[i]);
+			//var re = /\[\[(Category:[^\]]+)\]\]/;
+			var ma = cat_re.exec(lines[i]);
+			if( ma ) {
+				console.log(ma[1]);
+				foundcat_count++;
+				
+				/* update link counts of the current entry current entry */
+				updlnk_stmt.run(row.link_count + 1, entry_name, function() {
+					
+					/* check if we already have extracted entry in our database */
+					getcont_stmt.get(ma[1], function(err, ma_row) {
+						/* insert new entry into database and then new source record */
+						if (!ma_row)
+							newent_stmt.run(ma[1], function() {
+								newsrc_stmt.run(ma[1], entry_name, function(err) {})
+							});
+						else
+							newsrc_stmt.run(ma[1], entry_name, function(err) {})
+					});
+					//handleUpdateEntry(entry_name);
+				});
+				
+			}
+    	}
+		
+	});
+
+	/* update entry list and count in WUI */
 }
 
 /*** Launch Web Server ***/

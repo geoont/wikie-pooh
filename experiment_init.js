@@ -38,6 +38,7 @@ db.serialize(function() {
 	db.run("CREATE TABLE entries (" +
 			"entry TEXT PRIMARY KEY, " +
 			"pageid INT," + /* pageid <= 1 means that page does not exist */
+			"link_count INT DEFAULT 0, " +
 			"edits INT, " +
 			"wiki_version INT, " +
 			"content TEXT, " +

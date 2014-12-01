@@ -62,6 +62,7 @@ io.sockets.on('connection', onConnect);
 var soc;
 function onConnect(socket) {
     socket.on('getEntryList', handleEntryListRequest);
+    socket.on('getPgtitle', handlePgtitleRequest);
     soc = socket;
 }
 
@@ -88,6 +89,16 @@ function handleEntryListRequest() {
 					soc.emit('entryList', entry_list );		
 			});
 		}
+	});
+}
+
+function handlePgtitleRequest() {
+	db.get("SELECT count(*) AS cnt FROM entries", function(err, row) {
+		soc.emit('pgtitle', { 
+			'name' : dbfile, 
+			'lang' : lang, 
+			'entry_count' : (row ? row.cnt : 0)
+		})
 	});
 }
 

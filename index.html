@@ -48,19 +48,36 @@
             </table>
         </script>
 
+        <script id="pgtitle-template" type="x-handlebars-template">
+			File: {{name}} Lang: <em>{{lang}}</em> entries: <em>{{entry_count}}</em>
+        </script>
+        
         <script>
         
+        	var expInfo; /* general information about the experiment */
+        	
             var entriesTemplateScript = $("#entries-template").html(); 
             var entriesTemplate = Handlebars.compile (entriesTemplateScript); 
             Handlebars.registerPartial("entry", $("#entry-template").html());
             
+            var pgtitleTemplateScript = $("#pgtitle-template").html(); 
+            var pgtitleTemplate = Handlebars.compile (pgtitleTemplateScript); 
+            
             var socket = io.connect();
             
-            socket.on("entryList", showTimeStatus);
-            function showTimeStatus(msg) {
+            socket.on("entryList", showEntryList);
+            function showEntryList(msg) {
                 $("#entryTable").html(entriesTemplate(msg));
             }
             socket.emit('getEntryList');
+
+            socket.on("pgtitle", showPgtitle);
+            function showPgtitle(msg) {
+            	expInfo = msg;
+                $("#pgtitle").html(pgtitleTemplate(msg));
+            }
+            socket.emit('getPgtitle');
+            
         </script>
     </head>
     
@@ -89,11 +106,21 @@
     
     <div class="container theme-showcase" role="main">
     
+         <div class="jumbotron">
+            <h1 id="pgtitle">
+            	loading
+            	<blink>...</blink>
+            </h1>
+        </div>
+        
         <div class="page-header">
             <h2 id="entries">List of Entries</h2>
         </div>
         
-        <div id="entryTable"> - </div>
+        <div id="entryTable">
+        	loading
+        	<blink>...</blink>
+        </div>
 
     </div>
     </body>

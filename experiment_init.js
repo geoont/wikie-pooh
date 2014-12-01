@@ -93,7 +93,7 @@ lineReader.eachLine(init_cats, function(line, last) {
   
   stmt1.run(entry, comment, function() { 
 	  ++entries_inserted;
-	  if (comment != '')
+	  //if (comment != '')
 		  stmt2.run(entry);
 	  complete_loading();
   });

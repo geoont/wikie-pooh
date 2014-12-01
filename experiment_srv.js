@@ -65,13 +65,29 @@ function onConnect(socket) {
     soc = socket;
 }
 
+var ents_stmt = db.prepare("SELECT * FROM entries");
+var srcs_stmt = db.prepare("SELECT src_entry FROM cat_src WHERE entry = ?");
+
 function handleEntryListRequest() {
 	//console.log('Entry list request, sending ' + entryList);
-	var entry_list = [];
-	db.each("SELECT * FROM entries", function(err, row) {
-		entry_list.push( row );
-	}, function (err, row_cnt) {
-		soc.emit('entryList', entry_list );		
+	var srcqcnt = 0;
+	ents_stmt.all( function(err, entry_list) {
+		for (var i = 0; i < entry_list.length; i++) {
+			var entry = entry_list[i];
+			
+			srcs_stmt.all(entry.entry, function(err, all_srcs) {
+				if (all_srcs.length > 0) {
+					var src_list = [];
+					for (var j = 0; j < all_srcs.length; j++) {
+						src_list.push( all_srcs[j].src_entry );
+					}
+					entry['sources'] = src_list;
+				}
+				srcqcnt++;
+				if (srcqcnt == entry_list.length)
+					soc.emit('entryList', entry_list );		
+			});
+		}
 	});
 }
 

@@ -23,6 +23,7 @@
 
         <script id="entry-template" type="x-handlebars-template">
 	        <tr id="{{entry}}" class="entry">
+				<td>{{@index}}</td>
 				<td>
 					<a href="{{entry}}">{{entry}}</a>
 					<div style="float: right; clear: right; margin: 10px;">
@@ -40,6 +41,7 @@
             <table border="1" class="table table-bordered">
             <thead>
                 <tr>
+					<th>#</th>
                     <th>Entry</th>
                     <th>Sources</th>
                     <th>Heirs</th>

@@ -25,13 +25,13 @@
 	        <tr id="{{entry}}" class="entry">
 				<td>{{@index}}</td>
 				<td>
-					<a href="{{entry}}">{{entry}}</a>
+					{{link entry}}
 					<div style="float: right; clear: right; margin: 10px;">
 						<button type="button" class="btn btn-xs btn-default" id="btn-load-{{entry}}" onClick="socket.emit('loadEntry', '{{entry}}')">Load</button>
 						<button type="button" class="btn btn-xs btn-default" id="btn-parse-{{entry}}" onClick="socket.emit('parseEntry', '{{entry}}')">Parse</button>
 					</div>
 				</td>
-				<td>{{#sources}}<a href="{{this}}">{{this}}</a> {{/sources}}</td>
+				<td>{{#sources}}{{link this}} {{/sources}}</td>
 				<td>{{heirs}}</td>
 				<td>{{comment}}</td>
 			</tr>
@@ -50,7 +50,7 @@
             </thead>
             <tbody>
                 {{#this}}
-					{{> entry}}
+					{{> entry_row}}
                 {{/this}}
             </tbody>
             </table>
@@ -66,13 +66,26 @@
         
         	var expInfo; /* general information about the experiment */
         	
+        	/* Handlebars templates */
+        	
             var entriesTemplateScript = $("#entries-template").html(); 
             var entriesTemplate = Handlebars.compile (entriesTemplateScript); 
-            Handlebars.registerPartial("entry", $("#entry-template").html());
+            Handlebars.registerPartial("entry_row", $("#entry-template").html());
             
             var pgtitleTemplateScript = $("#pgtitle-template").html(); 
             var pgtitleTemplate = Handlebars.compile (pgtitleTemplateScript); 
             
+            Handlebars.registerHelper('link', function(entry) {
+  				var url = Handlebars.escapeExpression(expInfo.uri + entry),
+  					text = Handlebars.escapeExpression(entry);
+
+  				return new Handlebars.SafeString(
+    				"<a href='" + url + "'>" + text + "</a>"
+  				);
+			});
+			
+			/* setup connection to servlets */
+			
             var socket = io.connect();
             
             socket.on("pgtitle", showPgtitle);

@@ -62,6 +62,7 @@ var server = http.createServer(function(req, res){
 var io = require('socket.io').listen(server);
 io.sockets.on('connection', onConnect);
 
+/* launch servlets for specific functions */
 var soc;
 function onConnect(socket) {
     socket.on('getEntryList', handleEntryListRequest);
@@ -71,14 +72,11 @@ function onConnect(socket) {
     soc = socket;
 }
 
-function handleLoadEntry(entry) {
-	console.log('load request for ' + msg);
-	soc.emit("updateEntry", entry);
-}
+/*** SERVLETS ***/
 
-function handleParseEntry(entry) {
-	console.log('parse request for ' + msg);
-}
+/**
+ * Send a list of Wikipedia entries to the browser 
+ */
 
 var ents_stmt = db.prepare("SELECT * FROM entries");
 var srcs_stmt = db.prepare("SELECT src_entry FROM cat_src WHERE entry = ?");
@@ -106,6 +104,9 @@ function handleEntryListRequest() {
 	});
 }
 
+/**
+ * Basic servlet configuration: working database, language, number of entities, URLs
+ */
 function handlePgtitleRequest() {
 	db.get("SELECT count(*) AS cnt FROM entries", function(err, row) {
 		soc.emit('pgtitle', { 
@@ -118,22 +119,27 @@ function handlePgtitleRequest() {
 	});
 }
 
+/**
+ * Retrieve specofied page from Wikipedia
+ * 
+ * @param entry the name of the entry
+ */
+function handleLoadEntry(entry) {
+	console.log('load request for ' + msg);
+	soc.emit("updateEntry", entry);
+}
+
+/**
+ * Parse Wikipedia entry, insert new entries into the database
+
+ * @param entry the name of the entry
+ */
+function handleParseEntry(entry) {
+	console.log('parse request for ' + msg);
+}
+
+/*** Launch Web Server ***/
 console.log("Open in your browser: http://localhost:" + srv_port);
 server.listen(srv_port);
 
-/* launch servlets for specific functions */
-
-/*** SERVLETS ***/
-
-/**
- * Send a list of Wikipedia entries to the browser 
- */
-
-/**
- * Receive toggled skip flag and save it in the database 
- */
-
-/**
- * Retrieve and parse entries from Wikipedia, insert then into the database
- */
-
+/* THE END */

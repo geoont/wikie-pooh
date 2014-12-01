@@ -30,8 +30,19 @@ if (!cat_name) {
 	process.exit(1);
 }
 
+/* wikipedia retriever bot */
+var bot = require('nodemw'),
+	fs = require('fs'),
+	async = require('async');
+
 var wiki_srv = lang + '.wikipedia.org';
 var wiki_uri = 'http://' + wiki_srv + '/wiki/';
+
+var client = new bot({
+	server: wiki_srv,  /* host name of MediaWiki-powered site */
+	path: '/w',        /* path to api.php script */
+	debug: true        /* is more verbose when set to true */
+});
 
 /* open the database */
 var sqlite3 = require('sqlite3').verbose();
@@ -79,26 +90,42 @@ function onConnect(socket) {
  */
 
 var ents_stmt = db.prepare("SELECT * FROM entries");
+var ent1_stmt = db.prepare("SELECT * FROM entries WHERE entry = ?");
 var srcs_stmt = db.prepare("SELECT src_entry FROM cat_src WHERE entry = ?");
+
+/**
+ * Queries the database to retrieve information about specific entry.
+ * 
+ * @param entry a hash of entry data, will be modified
+ * @param callback (entry)
+ */
+function getEntryData(entry, callback) {
+	/* reduce content size to 1024 characters */
+	if (entry.content && entry.content.length > 1024)
+		entry.content = entry.content.substring(0, 1024) + '...';
+	
+	srcs_stmt.all(entry.entry, function(err, all_srcs) {
+		if (all_srcs.length > 0) {
+			var src_list = [];
+			for (var j = 0; j < all_srcs.length; j++) {
+				src_list.push( all_srcs[j].src_entry );
+			}
+			entry['sources'] = src_list;
+		}
+		callback && callback(entry);
+	});
+	
+}
 
 function handleEntryListRequest() {
 	//console.log('Entry list request, sending ' + entryList);
 	var srcqcnt = 0;
 	ents_stmt.all( function(err, entry_list) {
 		for (var i = 0; i < entry_list.length; i++) {
-			var entry = entry_list[i];
-			
-			srcs_stmt.all(entry.entry, function(err, all_srcs) {
-				if (all_srcs.length > 0) {
-					var src_list = [];
-					for (var j = 0; j < all_srcs.length; j++) {
-						src_list.push( all_srcs[j].src_entry );
-					}
-					entry['sources'] = src_list;
-				}
+			getEntryData(entry_list[i], function() {
 				srcqcnt++;
 				if (srcqcnt == entry_list.length)
-					soc.emit('entryList', entry_list );		
+					soc.emit('entryList', entry_list );
 			});
 		}
 	});
@@ -120,22 +147,55 @@ function handlePgtitleRequest() {
 }
 
 /**
- * Retrieve specofied page from Wikipedia
- * 
+ * Handles update entry request, can be called by other handles
+ * @param entry
+ */
+function handleUpdateEntry(entry_name) {
+	//console.log(entry_name)
+	ent1_stmt.get(entry_name, function(err, entry) {
+		getEntryData(entry, function() {
+			//console.log(entry)
+			soc.emit("updateEntry", entry);
+		})
+	})
+}
+
+/**
+ * Retrieve the specified page from Wikipedia
  * @param entry the name of the entry
  */
+var upd_stmt = db.prepare("UPDATE entries SET pageid = ?, content = ? WHERE entry = ?");
 function handleLoadEntry(entry) {
-	console.log('load request for ' + msg);
-	soc.emit("updateEntry", entry);
+	console.log('load request for ' + entry);
+	
+    client.api.call({action:'query', titles:entry}, function(info, next, data) {
+
+        /* check if the page exists */
+        var pageid = Object.keys(data.query.pages).shift();
+
+        if (pageid > 1) { /* other pageid indicate that the page does not exist or other error */
+
+        	client.getArticle(entry, function(content) {
+      			console.log('Downloaded %s (%s): %s...', entry, pageid, content.substr(0, 25).replace(/\n/g, ' '));
+      			/* save the page content in the database */
+      			upd_stmt.run( pageid, content, entry, function(err){ handleUpdateEntry(entry) } );
+      		});
+
+        } else { /* page not found */
+        	console.log('Page not found: ', entry, ' pageId:', pageid);
+  			upd_stmt.run( pageid, null, entry, function(err){ handleUpdateEntry(entry) } );
+        }
+        
+	});
 }
 
 /**
  * Parse Wikipedia entry, insert new entries into the database
-
+ * 
  * @param entry the name of the entry
  */
 function handleParseEntry(entry) {
-	console.log('parse request for ' + msg);
+	console.log('parse request for ' + entry);
 }
 
 /*** Launch Web Server ***/

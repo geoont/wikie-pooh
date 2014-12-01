@@ -22,19 +22,44 @@
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
 
         <script id="entry-template" type="x-handlebars-template">
-	        <tr id="{{entry}}" class="entry">
-				<td>{{@index}}</td>
-				<td>
-					{{link entry}}
-					<div style="float: right; clear: right; margin: 10px;">
-						<button type="button" class="btn btn-xs btn-default" id="btn-load-{{entry}}" onClick="socket.emit('loadEntry', '{{entry}}')">Load</button>
-						<button type="button" class="btn btn-xs btn-default" id="btn-parse-{{entry}}" onClick="socket.emit('parseEntry', '{{entry}}')">Parse</button>
-					</div>
-				</td>
-				<td>{{#sources}}{{link this}} {{/sources}}</td>
-				<td>{{heirs}}</td>
-				<td>{{comment}}</td>
-			</tr>
+			<td>{{index}}</td>
+			<td>
+				{{link entry}}
+				<button 
+					type="button" 
+					class="btn btn-xs btn-default" 
+					onClick="moreContent(+100,'{{entry}}')"
+					{{#unless content}}disabled{{/unless}} 
+				>+</button>
+				<button 
+					type="button" 
+					class="btn btn-xs btn-default" 
+					onClick="moreContent(-100,'{{entry}}')"
+					{{#unless content}}disabled{{/unless}} 
+				>-</button>
+				<div style="float: right; clear: right; margin: 10px;">
+					<button 
+						type="button" 
+						class="btn btn-xs btn-default" 
+						id="btn-load-{{clean_id}}" 
+						onClick="socket.emit('loadEntry', '{{entry}}')"
+						{{#if content}}disabled{{/if}} 
+						{{#if not_found}}disabled{{/if}} 
+					>Load</button>
+					<button 
+						type="button" 
+						class="btn btn-xs btn-default" 
+						id="btn-parse-{{clean_id}}" 
+						onClick="socket.emit('parseEntry', '{{entry}}')"
+						{{#unless content}}disabled{{/unless}} 
+					>Parse</button>
+				</div>
+				<div id="content-{{clean_id}}"></div>
+			</td>
+			<td>{{#if not_found}}<font color="red">not found</font> ({{pageid}}){{else}}{{pageid}}{{/if}}</td>
+			<td>{{#sources}}{{link this}} {{/sources}}</td>
+			<td>{{heirs}}</td>
+			<td>{{comment}}</td>
         </script>
         
         <script id="entries-template" type="x-handlebars-template">
@@ -43,6 +68,7 @@
                 <tr>
 					<th>#</th>
                     <th>Entry</th>
+                    <th>PageId</th>
                     <th>Sources</th>
                     <th>Heirs</th>
                     <th>Comment</th>
@@ -50,7 +76,9 @@
             </thead>
             <tbody>
                 {{#this}}
+		        <tr id="tr-{{this.clean_id}}" class="entry">
 					{{> entry_row}}
+				</tr>
                 {{/this}}
             </tbody>
             </table>
@@ -70,6 +98,8 @@
         	
             var entriesTemplateScript = $("#entries-template").html(); 
             var entriesTemplate = Handlebars.compile (entriesTemplateScript); 
+            var entryTemplateScript = $("#entry-template").html(); 
+            var entryTemplate = Handlebars.compile (entryTemplateScript); 
             Handlebars.registerPartial("entry_row", $("#entry-template").html());
             
             var pgtitleTemplateScript = $("#pgtitle-template").html(); 
@@ -90,11 +120,41 @@
             
             socket.on("pgtitle", showPgtitle);
             socket.on("entryList", showEntryList);
-     	   
+            socket.on("updateEntry", updateEntry);
+
+			/** hash of all entries */
+			var entryMap = [];
+			     	   
+			/**
+			 * Adds entry fiields that are neccessary for page operation.
+			 */
+			function fixEntry(entry) {
+				entry.clean_id = entry.entry.replace(/[()\s\.]/gi, '')
+          		if (entry.pageid && entry.pageid <= 1) 
+           			entry.not_found = true;
+           			
+           		/* copy some of the important parameters from if the entry alreay in the list */
+           		if (entryMap[entry.entry]) {
+           			entry.index = entryMap[entry.entry].index
+           		}
+           		return entry;
+			}
+						
             function showEntryList(msg) {
+            	for(var i=0; i<msg.length; ++i) {
+            		msg[i] = fixEntry(msg[i]);
+            		msg[i].index = i+1;
+            		entryMap[msg[i].entry] = msg[i];
+            	}
                 $("#entryTable").html(entriesTemplate(msg));
             }
 
+			function updateEntry(msg) {
+           		msg = fixEntry(msg);
+				entryMap[msg.entry] = msg;
+				$("#tr-" + msg.clean_id).html(entryTemplate(msg));
+			}
+			
             function showPgtitle(msg) {
             	expInfo = msg;
                 $("#pgtitle").html(pgtitleTemplate(msg));
@@ -103,6 +163,25 @@
             }
             
             socket.emit('getPgtitle');
+            
+            function moreContent( increment, entry ) {
+            	if (entryMap[entry] && entryMap[entry].content) {
+            		if (entryMap[entry].content_sz)
+            			entryMap[entry].content_sz += increment;
+            		else
+            			entryMap[entry].content_sz = increment;
+
+					var elps = '';
+            		if (entryMap[entry].content_sz < 0)
+            			entryMap[entry].content_sz = 0;
+ 					else if (entryMap[entry].content_sz > entryMap[entry].content.length)        			
+            			entryMap[entry].content_sz = entryMap[entry].content.length;
+            		else
+            			elps = '...';
+            			
+            		$("#content-" + entryMap[entry].clean_id).html(entryMap[entry].content.substring(0, entryMap[entry].content_sz) + elps); 	
+            	}	
+            }
         </script>
     </head>
     

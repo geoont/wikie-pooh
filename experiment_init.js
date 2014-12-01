@@ -37,6 +37,7 @@ var db = new sqlite3.Database(dbfile, sqlite3.OPEN_CREATE | sqlite3.OPEN_READWRI
 db.serialize(function() {
 	db.run("CREATE TABLE entries (" +
 			"entry TEXT PRIMARY KEY, " +
+			"pageid INT," + /* pageid <= 1 means that page does not exist */
 			"edits INT, " +
 			"wiki_version INT, " +
 			"content TEXT, " +

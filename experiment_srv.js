@@ -202,6 +202,7 @@ function handleUpdateComment(msg) {
  * @param entry the name of the entry
  */
 var getcont_stmt = db.prepare("SELECT content, link_count FROM entries WHERE entry = ?");
+var getcont2_stmt = db.prepare("SELECT content, link_count FROM entries WHERE entry = ?");
 var updlnk_stmt = db.prepare("UPDATE entries SET link_count = ? WHERE entry = ?");
 var newent_stmt = db.prepare("INSERT INTO entries (entry) VALUES (?)");
 var newsrc_stmt = db.prepare("INSERT INTO cat_src (entry, src_entry) VALUES (?, ?)");
@@ -211,38 +212,55 @@ function handleParseEntry(entry_name) {
 	var foundcat_count = 0;
 	
 	/* retrieve page content from database */
-	getcont_stmt.get(entry_name, function(err, row) {
+	getcont_stmt.all(entry_name, function(err, rows) {
 
 		/* parsing out categories */
-		var lines = row.content.match(/[^\r\n]+/g);
+		var lines = rows[0].content.match(/[^\r\n]+/g);
 		
 		//console.log(lines);
+		var cats = [];
 		for( var i = 0; i < lines.length; i++) {
-			//console.log(lines[i]);
-			//var re = /\[\[(Category:[^\]]+)\]\]/;
 			var ma = cat_re.exec(lines[i]);
-			if( ma ) {
-				console.log(ma[1]);
-				foundcat_count++;
-				
-				/* update link counts of the current entry current entry */
-				updlnk_stmt.run(row.link_count + 1, entry_name, function() {
-					
-					/* check if we already have extracted entry in our database */
-					getcont_stmt.get(ma[1], function(err, ma_row) {
+			if( ma ) 
+				cats.push(ma[1]);
+		}
+		console.log(cats);
+
+		for (var i = 0; i < cats.length; i++) {
+			var new_cat = cats[i];
+			console.log('1' + new_cat);
+			db.serialize(function() {
+				newent_stmt.run(new_cat, function(err2) { console.log(err2) });
+				newsrc_stmt.run(new_cat, entry_name, function(err2) { console.log(err2) });
+			})			
+			
+		}
+		
+		//console.log('0' + new_cat);
+
+//				db.serialize(function () {
+
+					/* update link counts of the current entry current entry */
+//					updlnk_stmt.run(rows[0].link_count + 1, entry_name);
+
+					/* check if we already have the entry in our database */
+					//getcont_stmt.all(new_cat, function(err, ma_rows) {
+						//console.log('1' + new_cat);
 						/* insert new entry into database and then new source record */
-						if (!ma_row)
-							newent_stmt.run(ma[1], function() {
-								newsrc_stmt.run(ma[1], entry_name, function(err) {})
-							});
-						else
-							newsrc_stmt.run(ma[1], entry_name, function(err) {})
-					});
+						//if ( ma_rows.length == 0) {
+							//newent_stmt.run(new_cat, function() {
+								//console.log('2'+new_cat);
+								//newsrc_stmt.run(new_cat, entry_name, function(err2) { console.log(err2) })
+							//});
+						//} else {
+						//	newsrc_stmt.run(new_cat, entry_name, function(err2) { console.log(err2) });
+						//}
+					//});
 					//handleUpdateEntry(entry_name);
-				});
+				//});
 				
-			}
-    	}
+			//}
+    	//}
 		
 	});
 

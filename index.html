@@ -54,7 +54,7 @@
 						{{#unless content}}disabled{{/unless}} 
 					>Parse</button>
 				</div>
-				<div id="content-{{clean_id}}"></div>
+				<div id="content-{{clean_id}}">{{first50 content}}</div>
 			</td>
 			<td>{{#if not_found}}<font color="red">not found</font> ({{pageid}}){{else}}{{pageid}}{{/if}}</td>
 			<td>{{#sources}}{{link this}} {{/sources}}</td>
@@ -111,6 +111,13 @@
 
   				return new Handlebars.SafeString(
     				"<a href=\"javascript:popwin('" + url + "');\">" + text + "</a>"
+  				);
+			});
+			
+			/* prints first 40 characters */
+            Handlebars.registerHelper('first50', function(text) {
+  				return new Handlebars.SafeString(
+    				text ? Handlebars.escapeExpression(text).substring(0, 50) + '...' : ''
   				);
 			});
 			

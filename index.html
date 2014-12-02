@@ -110,7 +110,7 @@
   					text = Handlebars.escapeExpression(entry);
 
   				return new Handlebars.SafeString(
-    				"<a href='" + url + "'>" + text + "</a>"
+    				"<a href=\"javascript:popwin('" + url + "');\">" + text + "</a>"
   				);
 			});
 			
@@ -196,6 +196,13 @@
             		el.css('background-color' , '#FF0000');
             	}
             }
+            
+            var newwindow; // from http://www.yourhtmlsource.com/javascript/popupwindows.html
+			function popwin(url)
+			{
+				newwindow=window.open(url,'name','height=800,width=600');
+				if (window.focus) {newwindow.focus()}
+			}
         </script>
     </head>
     

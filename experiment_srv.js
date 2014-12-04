@@ -81,6 +81,7 @@ function onConnect(socket) {
     socket.on('loadEntry', handleLoadEntry);
     socket.on('parseEntry', handleParseEntry);
     socket.on('updateComment', handleUpdateComment);
+    socket.on('loadSubcats', handleLoadSubcats);
     soc = socket;
 }
 
@@ -189,6 +190,33 @@ function handleLoadEntry(entry) {
         }
         
 	});
+}
+
+/**
+ * Retrieve the pages that belong to a category
+ * @param entry Wikipedia category name
+ */
+function handleLoadSubcats(entry) {
+	
+	var category = entry.substring(cat_name.length);
+	
+	console.log("Retrieving category: " + category);
+	client.getPagesInCategory(category, function(pages) {
+
+		for (var i=0; i<pages.length; i++) {
+	        if (pages[i].title in r_entries)
+	        	/* increment count of sources for the entry */
+	        	/* add entry to update list */
+	        else {
+	        	/* insert new entry to the database */
+	        	/* add entry to new entry list */
+		    }
+			out_count++;
+		}
+
+		callback && callback();
+	});
+
 }
 
 var updcom_stmt = db.prepare("UPDATE entries SET comment = ? WHERE entry = ?");

@@ -142,7 +142,8 @@ function handlePgtitleRequest() {
 			'lang' : lang, 
 			'entry_count' : (row ? row.cnt : 0),
 			'srv' : wiki_srv,
-			'uri' : wiki_uri
+			'uri' : wiki_uri,
+			'cat_name' : cat_name /* the word 'category' in the respective language */
 		})
 	});
 }

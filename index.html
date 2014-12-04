@@ -38,21 +38,31 @@
 					{{#unless content}}disabled{{/unless}} 
 				>-</button>
 				<div style="float: right; clear: right; margin: 10px;">
-					<button 
-						type="button" 
-						class="btn btn-xs btn-default" 
-						id="btn-load-{{clean_id}}" 
-						onClick="socket.emit('loadEntry', '{{entry}}')"
-						{{#if content}}disabled{{/if}} 
-						{{#if not_found}}disabled{{/if}} 
-					>Load</button>
-					<button 
-						type="button" 
-						class="btn btn-xs btn-default" 
-						id="btn-parse-{{clean_id}}" 
-						onClick="socket.emit('parseEntry', '{{entry}}')"
-						{{#unless content}}disabled{{/unless}} 
-					>Parse</button>
+					{{#if is_cat}}
+						<button 
+							type="button" 
+							class="btn btn-xs btn-default" 
+							id="btn-load-{{clean_id}}" 
+							onClick="socket.emit('loadSubcats', '{{entry}}')"
+							{{#if link_count}}disabled{{/if}} 
+						>Load Subcats</button>
+					{{else}}
+						<button 
+							type="button" 
+							class="btn btn-xs btn-default" 
+							id="btn-load-{{clean_id}}" 
+							onClick="socket.emit('loadEntry', '{{entry}}')"
+							{{#if content}}disabled{{/if}} 
+							{{#if not_found}}disabled{{/if}} 
+						>Load</button>
+						<button 
+							type="button" 
+							class="btn btn-xs btn-default" 
+							id="btn-parse-{{clean_id}}" 
+							onClick="socket.emit('parseEntry', '{{entry}}')"
+							{{#unless content}}disabled{{/unless}} 
+						>Parse</button>
+					{{/if}}
 				</div>
 				<div id="content-{{clean_id}}">{{first50 content}}</div>
 			</td>
@@ -136,14 +146,23 @@
 			 * Adds entry fiields that are neccessary for page operation.
 			 */
 			function fixEntry(entry) {
+				 
+				/* create a clean identifier for the entry that works with JQuery */ 
 				entry.clean_id = entry.entry.replace(/[()\s\.]/gi, '')
+				
+				/* sets "not_found" flag */
           		if (entry.pageid && entry.pageid <= 1) 
            			entry.not_found = true;
-           			
-           		/* copy some of the important parameters from if the entry alreay in the list */
+           		
+				/* sets the flag indicating that entry is a category */
+            	entry.is_cat = entry.entry.indexOf(expInfo.cat_name) == 0 ? true : false; 
+
+            	/* copy several important parameters from the old entry 
+           		   if the entry alreay in the list */
            		if (entryMap[entry.entry]) {
            			entry.index = entryMap[entry.entry].index
            		}
+           		
            		return entry;
 			}
 						
@@ -171,6 +190,9 @@
             
             socket.emit('getPgtitle');
             
+            /**
+             * increase or decreases the siz e of the content snippet
+             */
             function moreContent( increment, entry ) {
             	if (entryMap[entry] && entryMap[entry].content) {
             		if (entryMap[entry].content_sz)
@@ -190,6 +212,9 @@
             	}	
             }
             
+            /**
+             * Editing of the 'comment' field
+             */
             function commentKeyEvent(event, entry_name) {
             	var el = $('#comment-' + entryMap[entry_name].clean_id);
             	if (event.keyCode == 13) /* enter pressed */ {
@@ -204,6 +229,9 @@
             	}
             }
             
+            /**
+             * Places wikipedia page in a new window in the upper right corner of the screen.
+             */
             var newwindow; // from http://www.yourhtmlsource.com/javascript/popupwindows.html
 			function popwin(url)
 			{

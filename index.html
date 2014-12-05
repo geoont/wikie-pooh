@@ -24,7 +24,7 @@
         <script src="//cdnjs.cloudflare.com/ajax/libs/floatthead/1.2.8/jquery.floatThead.min.js"></script>
         
         <script id="entry-template" type="x-handlebars-template">
-			<td>{{index}}</td>
+			<td>{{rowid}}</td>
 			<td>
 				{{link entry}}
 				<button 
@@ -76,27 +76,10 @@
 			<td><textarea id="comment-{{clean_id}}" class="form-control" rows="2" onkeydown="commentKeyEvent(event, '{{entry}}')">{{comment}}</textarea></td>
         </script>
         
-        <script id="entries-template" type="x-handlebars-template">
-            <table border="1" class="table table-bordered" id='table-of-entries'>
-            <thead>
-                <tr>
-					<th>#</th>
-                    <th>Entry</th>
-                    <th>PageId</th>
-                    <th>Sources</th>
-                    <th>#links/pages</th>
-                    <th>dist</th>
-                    <th>Comment</th>
-                </tr>
-            </thead>
-            <tbody>
-                {{#this}}
-		        <tr id="tr-{{this.clean_id}}" class="entry">
-					{{> entry_row}}
-				</tr>
-                {{/this}}
-            </tbody>
-            </table>
+        <script id="row-template" type="x-handlebars-template">
+	        <tr id="tr-{{clean_id}}" class="entry">
+				{{> entry_row}}
+			</tr>
         </script>
 
         <script id="pgtitle-template" type="x-handlebars-template">
@@ -111,11 +94,12 @@
         	
         	/* Handlebars templates */
         	
-            var entriesTemplateScript = $("#entries-template").html(); 
-            var entriesTemplate = Handlebars.compile (entriesTemplateScript); 
+            var rowTemplateScript = $("#row-template").html(); 
+            var rowTemplate = Handlebars.compile (rowTemplateScript); 
+            Handlebars.registerPartial("entry_row", $("#entry-template").html());
+
             var entryTemplateScript = $("#entry-template").html(); 
             var entryTemplate = Handlebars.compile (entryTemplateScript); 
-            Handlebars.registerPartial("entry_row", $("#entry-template").html());
             
             var pgtitleTemplateScript = $("#pgtitle-template").html(); 
             var pgtitleTemplate = Handlebars.compile (pgtitleTemplateScript); 
@@ -176,15 +160,14 @@
             		msg[i] = fixEntry(msg[i]);
             		msg[i].index = i+1;
             		entryMap[msg[i].entry] = msg[i];
+	                $("#entry-table-body").append(rowTemplate(msg[i]));
             	}
-                $("#entryTable").html(entriesTemplate(msg));
-                
-                /* afix the table header to one place */
-    			$('table-of-entries').floatThead({
-    				useAbsolutePositioning: false
-    			});
-
             }
+            
+            /* afix the table header to one place */
+   			$('#table-of-entries').floatThead({
+   				useAbsolutePositioning: false
+   			});
 
 			function updateEntries(msg) {
 				for (var i = 0; i < msg.length; i++) {
@@ -285,7 +268,23 @@
             <h2 id="entries">List of Entries</h2>
         </div>
         
-        <div id="entryTable"></div>
+        <div id="entryTable">
+            <table border="1" class="table table-bordered" id='table-of-entries'>
+            <thead>
+                <tr>
+					<th>#</th>
+                    <th>Entry</th>
+                    <th>PageId</th>
+                    <th>Sources</th>
+                    <th>#links/pages</th>
+                    <th>dist</th>
+                    <th>Comment</th>
+                </tr>
+            </thead>
+            <tbody id='entry-table-body'>
+            </tbody>
+            </table>
+        </div>
 
     	<div id="page-bottom"></div>
     </div>

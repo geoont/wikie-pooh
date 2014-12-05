@@ -88,7 +88,7 @@ function onConnect(socket) {
 /*** SERVLETS ***/
 
 var srcs_stmt = db.prepare("SELECT src_entry FROM cat_src WHERE entry = ?");
-var ent1_stmt = db.prepare("SELECT * FROM entries WHERE entry = ?");
+var ent1_stmt = db.prepare("SELECT rowid, * FROM entries WHERE entry = ?");
 
 /**
  * Queries the database to retrieve information about specific entry.
@@ -108,7 +108,7 @@ function getEntryData(entry_name, callback) {
 			entry.content = entry.content.substring(0, 1024) + '...';
 		
 		srcs_stmt.all(entry.entry, function(err, all_srcs) {
-			console.log(all_srcs);
+			//console.log(all_srcs);
 			if (all_srcs.length > 0) {
 				var src_list = [];
 				for (var j = 0; j < all_srcs.length; j++) {
@@ -116,7 +116,7 @@ function getEntryData(entry_name, callback) {
 				}
 				entry['sources'] = src_list;
 			}
-			console.log(entry);
+			//console.log(entry);
 			callback && callback(entry);
 		});
 		
@@ -141,7 +141,7 @@ function packEntryList(entry_names, callback) {
 	});
 }
 
-var ents_stmt = db.prepare("SELECT entry FROM entries");
+var ents_stmt = db.prepare("SELECT rowid, entry FROM entries ORDER BY rowid");
 /**
  * Send a list of Wikipedia entries to the browser 
  */
@@ -334,7 +334,7 @@ function handleParseEntry(entry_name) {
 			if( ma ) 
 				cats.push(ma[1]);
 		}
-		console.log(cats);
+		//console.log(cats);
 
 		/* increase link count */
 		inclnk_stmt.run(cats.length, entry_name, function(err, row) {

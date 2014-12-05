@@ -36,13 +36,15 @@ var db = new sqlite3.Database(dbfile, sqlite3.OPEN_CREATE | sqlite3.OPEN_READWRI
 
 db.serialize(function() {
 	db.run("CREATE TABLE entries (" +
-			"entry TEXT PRIMARY KEY, " +
-			"pageid INT," + /* pageid <= 1 means that page does not exist */
-			"link_count INT DEFAULT 0, " +
-			"edits INT, " +
-			"wiki_version INT, " +
-			"content TEXT, " +
-			"comment TEXT" +
+			"entry TEXT NOT NULL PRIMARY KEY, " +
+			"pageid INT," +                /* pageid <= 1 means that page does not exist */
+			"link_count INT DEFAULT 0, " + /* number of category links on the page or pages in the category */
+			"mentions INT DEFAULT 0, " +   /* number of times the page or category was mentioned in page category lists */
+			"dist INT DEFAULT 0," +        /* distance from the root of the graph (entries in the initial set are presumed to have 0 distance */
+			"edits INT, " +                /* number of page edits */
+			"wiki_version INT, " +         /* wikipedia revision ID of the page */
+			"content TEXT, " +             /* the content of the page in Wiki format */
+			"comment TEXT" +               /* explanation of what we do with the entry */
 			")");
 	db.run("CREATE TABLE cat_src (" +
 			"entry TEXT, " +

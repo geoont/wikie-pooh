@@ -63,6 +63,7 @@
 							id="btn-parse-{{clean_id}}" 
 							onClick="socket.emit('parseEntry', '{{entry}}')"
 							{{#unless content}}disabled{{/unless}} 
+							{{#if link_count}}disabled{{/if}} 
 						>Parse</button>
 					{{/if}}
 				</div>
@@ -71,6 +72,7 @@
 			<td>{{#if not_found}}<font color="red">not found</font> ({{pageid}}){{else}}{{pageid}}{{/if}}</td>
 			<td>{{#sources}}{{link this}} {{/sources}}</td>
 			<td>{{link_count}}</td>
+			<td>{{dist}}</td>
 			<td><textarea id="comment-{{clean_id}}" class="form-control" rows="2" onkeydown="commentKeyEvent(event, '{{entry}}')">{{comment}}</textarea></td>
         </script>
         
@@ -83,6 +85,7 @@
                     <th>PageId</th>
                     <th>Sources</th>
                     <th>#links/pages</th>
+                    <th>dist</th>
                     <th>Comment</th>
                 </tr>
             </thead>
@@ -138,8 +141,8 @@
             var socket = io.connect();
             
             socket.on("pgtitle", showPgtitle);
-            socket.on("entryList", showEntryList);
-            socket.on("updateEntry", updateEntry);
+            socket.on("addEntries", addEntries);
+            socket.on("updateEntries", updateEntries);
 
 			/** hash of all entries */
 			var entryMap = [];
@@ -168,7 +171,7 @@
            		return entry;
 			}
 						
-            function showEntryList(msg) {
+            function addEntries(msg) {
             	for(var i=0; i<msg.length; ++i) {
             		msg[i] = fixEntry(msg[i]);
             		msg[i].index = i+1;
@@ -183,20 +186,21 @@
 
             }
 
-			function updateEntry(msg) {
-           		msg = fixEntry(msg);
-				entryMap[msg.entry] = msg;
-				$("#tr-" + msg.clean_id).html(entryTemplate(msg));
+			function updateEntries(msg) {
+				for (var i = 0; i < msg.length; i++) {
+	           		msg[i] = fixEntry(msg[i]);
+					entryMap[msg[i].entry] = msg[i];
+					$("#tr-" + msg[i].clean_id).html(entryTemplate(msg[i]));
+				}
 			}
 			
             function showPgtitle(msg) {
             	expInfo = msg;
                 $("#pgtitle").html(pgtitleTemplate(msg));
-                
-	            socket.emit('getEntryList');
             }
             
             socket.emit('getPgtitle');
+            socket.emit('getEntryList');
             
             /**
              * increase or decreases the siz e of the content snippet
@@ -281,10 +285,7 @@
             <h2 id="entries">List of Entries</h2>
         </div>
         
-        <div id="entryTable">
-        	loading
-        	<blink>...</blink>
-        </div>
+        <div id="entryTable"></div>
 
     	<div id="page-bottom"></div>
     </div>

@@ -279,7 +279,7 @@ function finishSrcInsert(newEntries, updatedEntries, callback) {
 var exists_stmt = db.prepare("SELECT entry FROM entries WHERE entry = ?");
 var newent_stmt = db.prepare("INSERT INTO entries (entry) VALUES (?)");
 
-var inclnk_stmt = db.prepare("UPDATE entries SET link_count = link_count + ? WHERE entry = ?");
+var inclnk_stmt = db.prepare("UPDATE entries SET link_count = link_count + ?, parsed = 1 WHERE entry = ?");
 var incmnt_stmt = db.prepare("UPDATE entries SET mentions = mentions + ? WHERE entry = ?");
 
 /**

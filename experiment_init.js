@@ -44,7 +44,8 @@ db.serialize(function() {
 			"edits INT, " +                /* number of page edits */
 			"wiki_version INT, " +         /* wikipedia revision ID of the page */
 			"content TEXT, " +             /* the content of the page in Wiki format */
-			"comment TEXT" +               /* explanation of what we do with the entry */
+			"comment TEXT," +               /* explanation of what we do with the entry */
+			"parsed BOOLEAN DEFAULT 0" +   /* flag if the page was parsed or pages in the category has been downloaded */
 			")");
 	db.run("CREATE TABLE cat_src (" +
 			"entry TEXT, " +

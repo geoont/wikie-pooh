@@ -46,7 +46,7 @@
 							class="btn btn-xs btn-default" 
 							id="btn-load-{{clean_id}}" 
 							onClick="socket.emit('loadSubcats', '{{entry}}')"
-							{{#if link_count}}disabled{{/if}} 
+							{{#if parsed}}disabled{{/if}} 
 						>Load Pages</button>
 					{{else}}
 						<button 
@@ -63,14 +63,18 @@
 							id="btn-parse-{{clean_id}}" 
 							onClick="socket.emit('parseEntry', '{{entry}}')"
 							{{#unless content}}disabled{{/unless}} 
-							{{#if link_count}}disabled{{/if}} 
+							{{#if parsed}}disabled{{/if}} 
 						>Parse</button>
 					{{/if}}
 				</div>
 				<div id="content-{{clean_id}}">{{first50 content}}</div>
 			</td>
 			<td>{{#if not_found}}<font color="red">not found</font> ({{pageid}}){{else}}{{pageid}}{{/if}}</td>
-			<td>{{#sources}}{{link this}} {{/sources}}</td>
+			<td>
+			    {{#join sources ", "}}
+        			{{link this}}
+    			{{/join}}
+			</td>
 			<td>{{link_count}}</td>
 			<td>{{dist}}</td>
 			<td><textarea id="comment-{{clean_id}}" class="form-control" rows="2" onkeydown="commentKeyEvent(event, '{{entry}}')">{{comment}}</textarea></td>
@@ -127,6 +131,13 @@
     				text ? Handlebars.escapeExpression(text).substring(0, 50) + '...' : ''
   				);
 			});
+			
+			/* for the lists of sources */
+            Handlebars.registerHelper( "join", function( array, sep, options ) {
+                return array.map(function( item ) {
+                    return options.fn( item );
+                }).join( sep );
+            });
 			
 			/* setup connection to servlets */
 			

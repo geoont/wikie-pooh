@@ -244,6 +244,10 @@ function setRootDist(entry, dist, callback) {
 }
 
 var updcom_stmt = db.prepare("UPDATE entries SET comment = ? WHERE entry = ?");
+/**
+ * Updates comment field in the database
+ * @param msg
+ */
 function handleUpdateComment(msg) {
 	console.log(msg);
 	updcom_stmt.run(msg.comment, msg.entry);
@@ -257,7 +261,7 @@ var newsrc_stmt = db.prepare("INSERT INTO cat_src (entry, src_entry) VALUES (?, 
  */
 function insertSource(entry_name, src_entry, callback) {
 	newsrc_stmt.run(entry_name, src_entry, function(err) {
-		if (err) console.log("already in DB: " + entry_name + " <- " +src_entry);
+		if (err) console.log("already in DB: " + entry_name + " <- " + src_entry);
 		else console.log('new pair entity-source inserted: ' + entry_name + " <- " + src_entry);
 		callback && callback(entry_name, src_entry) ;
 	}); 
@@ -276,11 +280,11 @@ function finishSrcInsert(newEntries, updatedEntries, callback) {
 		});
 }
 
-var exists_stmt = db.prepare("SELECT entry FROM entries WHERE entry = ?");
-var newent_stmt = db.prepare("INSERT INTO entries (entry) VALUES (?)");
+var exists_stmt = db.prepare("SELECT entry, dist FROM entries WHERE entry = ?");
+var newent_stmt = db.prepare("INSERT INTO entries (entry, dist, mentions) VALUES (?, ?, 1)");
 
 var inclnk_stmt = db.prepare("UPDATE entries SET link_count = link_count + ?, parsed = 1 WHERE entry = ?");
-var incmnt_stmt = db.prepare("UPDATE entries SET mentions = mentions + ? WHERE entry = ?");
+var incmnt_stmt = db.prepare("UPDATE entries SET mentions = mentions + 1, dist = ? WHERE entry = ?");
 
 /**
  * Inserts a list fo new parsed out entries into a database, 
@@ -291,62 +295,65 @@ var incmnt_stmt = db.prepare("UPDATE entries SET mentions = mentions + ? WHERE e
  */
 function insertParsedEntries(cats, src_entry_name, callback) {
 	
-	/* increase link count */
-	inclnk_stmt.run(cats.length, src_entry_name, function(err, row) {
-	
-		var newEntries = [],
-			updatedEntries = [src_entry_name];
-		/* for each extracted category */
-		cats.forEach( function(mycat, i, ar)  {
-			
-			/* check if it already exists in the database */
-			exists_stmt.get( mycat, function(err, row) {
-				if (row) { /* entry already in the database */
-					console.log('existing entity updated: ' + mycat);
-					/* increase count of mentions */
-					incmnt_stmt.run(1, mycat, function(err, row) {
-						insertSource( mycat, src_entry_name, function(main_entry, src_entry) {
-							/* add to update list */
-							updatedEntries.push(main_entry);
-							if (updatedEntries.length + newEntries.length - 1 == cats.length) 
-								finishSrcInsert(newEntries, updatedEntries, callback);
+	/* retrieve source entry distance */
+	exists_stmt.get( src_entry_name, function(err, dist_row) {
+		var src_dist = dist_row.dist;
+		
+		/* increase link count */
+		inclnk_stmt.run(cats.length, src_entry_name, function(err) {
+		
+			var newEntries = [],
+				updatedEntries = [src_entry_name];
+			/* for each extracted category */
+			cats.forEach( function(mycat, i, ar)  {
+				
+				/* check if it already exists in the database */
+				exists_stmt.get( mycat, function(err, row) {
+					if (row) { /* entry already in the database */
+						console.log('existing entity updated: ' + mycat);
+						/* increase count of mentions, update distance only if current distance is less than the stored distance */
+						incmnt_stmt.run( row.dist > src_dist + 1 ? src_dist + 1 : row.dist, mycat, function(err, row) {
+							insertSource( mycat, src_entry_name, function(main_entry, src_entry) {
+								/* add to update list */
+								updatedEntries.push(main_entry);
+								if (updatedEntries.length + newEntries.length - 1 == cats.length) 
+									finishSrcInsert(newEntries, updatedEntries, callback);
+							});
 						});
-						
-					});
-				} else { /* entry is not in the database*/
-					/* insert entry into db */
-					newent_stmt.run(mycat, function(err) {
-						console.log('new entity created: ' + mycat);
-						insertSource( mycat, src_entry_name, function( main_entry, src_entry) {
-							/* add entry to new entries list */
-							newEntries.push(main_entry);
-							if (updatedEntries.length + newEntries.length - 1 == cats.length) 
-								finishSrcInsert(newEntries, updatedEntries, callback);
+					} else { /* entry is not in the database*/
+						/* insert entry into db */
+						newent_stmt.run(mycat, src_dist + 1, function(err) {
+							console.log('new entity created: ' + mycat);
+							insertSource( mycat, src_entry_name, function( main_entry, src_entry) {
+								/* add entry to new entries list */
+								newEntries.push(main_entry);
+								if (updatedEntries.length + newEntries.length - 1 == cats.length) 
+									finishSrcInsert(newEntries, updatedEntries, callback);
+							});
 						});
-					});
-				}
+					}
+				});
 			});
 		});
 	});
 }
 
-var getcont_stmt = db.prepare("SELECT content, link_count FROM entries WHERE entry = ?");
+var getcont_stmt = db.prepare("SELECT content FROM entries WHERE entry = ?");
 var cat_re = new RegExp("\\[\\[(" + cat_name + "[^\\]\\|]+)(?:\\|[^\\]]+)?\\]\\]");
-
 /**
  * Parse Wikipedia entry, insert new entries into the database
  * 
- * @param entry the name of the entry
+ * @param entry_name the name of the entry
  */
 function handleParseEntry(entry_name) {
 	console.log('parse request for ' + entry_name);
 	var foundcat_count = 0;
 	
 	/* retrieve page content from database */
-	getcont_stmt.all(entry_name, function(err, rows) {
+	getcont_stmt.get(entry_name, function(err, row) {
 
 		/* parsing out categories */
-		var lines = rows[0].content.match(/[^\r\n]+/g);
+		var lines = row.content.match(/[^\r\n]+/g);
 		
 		//console.log(lines);
 		/* build an array of categories */

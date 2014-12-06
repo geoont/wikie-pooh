@@ -39,6 +39,7 @@
 					onClick="moreContent(-100,'{{entry}}')"
 					{{#unless content}}disabled{{/unless}} 
 				>-</button>
+				{{#if not_found}}<font color="red">not found</font> ({{pageid}}){{else}}{{pageid}}{{/if}}
 				<div style="float: right; clear: right; margin: 10px;">
 					{{#if is_cat}}
 						<button 
@@ -69,13 +70,12 @@
 				</div>
 				<div id="content-{{clean_id}}">{{first50 content}}</div>
 			</td>
-			<td>{{#if not_found}}<font color="red">not found</font> ({{pageid}}){{else}}{{pageid}}{{/if}}</td>
 			<td>
 			    {{#join sources ", "}}
         			{{link this}}
     			{{/join}}
 			</td>
-			<td>{{link_count}}</td>
+			<td>{{link_count}} / {{mentions}}</td>
 			<td>{{dist}}</td>
 			<td><textarea id="comment-{{clean_id}}" class="form-control" rows="2" onkeydown="commentKeyEvent(event, '{{entry}}')">{{comment}}</textarea></td>
         </script>
@@ -295,9 +295,8 @@
                 <tr>
 					<th>#</th>
                     <th>Entry</th>
-                    <th>PageId</th>
                     <th>Sources</th>
-                    <th>#links/pages</th>
+                    <th>outlinks / mentions</th>
                     <th>dist</th>
                     <th>Comment</th>
                 </tr>

@@ -77,7 +77,15 @@
         </script>
         
         <script id="row-template" type="x-handlebars-template">
-	        <tr id="tr-{{clean_id}}" class="entry">
+	        <tr 
+				id="tr-{{clean_id}}" 
+				class="entry"
+				{{#if is_cat}}
+					bgcolor="#FFFFE6"
+				{{else}}
+					bgcolor="#FFFFFF"
+				{{/if}}
+			>
 				{{> entry_row}}
 			</tr>
         </script>

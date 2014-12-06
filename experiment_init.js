@@ -41,10 +41,11 @@ db.serialize(function() {
 			"link_count INT DEFAULT 0, " + /* number of category links on the page or pages in the category */
 			"mentions INT DEFAULT 0, " +   /* number of times the page or category was mentioned in page category lists */
 			"dist INT DEFAULT 0," +        /* distance from the root of the graph (entries in the initial set are presumed to have 0 distance */
-			"edits INT, " +                /* number of page edits */
-			"wiki_version INT, " +         /* wikipedia revision ID of the page */
+			"rev_count INT, " +            /* number of page edits */
+			"first_edit TEXT, " +          /* date of the first edit */
+			"last_edit TEXT, " +           /* date of the last edit */
 			"content TEXT, " +             /* the content of the page in Wiki format */
-			"comment TEXT," +               /* explanation of what we do with the entry */
+			"comment TEXT," +              /* explanation of what we do with the entry */
 			"parsed BOOLEAN DEFAULT 0" +   /* flag if the page was parsed or pages in the category has been downloaded */
 			")");
 	db.run("CREATE TABLE cat_src (" +

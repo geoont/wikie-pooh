@@ -192,7 +192,16 @@ function handleUpdateEntry(entry_name) {
  * Retrieve the specified page from Wikipedia
  * @param entry the name of the entry
  */
-var upd_stmt = db.prepare("UPDATE entries SET pageid = ?, content = ? WHERE entry = ?");
+var upd_stmt = db.prepare(
+		"UPDATE entries " +
+		"SET " +
+			"pageid = ?, " +
+			"content = ?, " +
+			"rev_count = ?, " +
+			"first_edit = ?, " +
+			"last_edit = ? " +
+		"WHERE entry = ?"
+	);
 function handleLoadEntry(entry) {
 	console.log('load request for ' + entry);
 	
@@ -205,12 +214,31 @@ function handleLoadEntry(entry) {
 
         	client.getArticle(entry, function(content) {
       			console.log('Downloaded %s (%s): %s...', entry, pageid, content.substr(0, 25).replace(/\n/g, ' '));
-      			/* save the page content in the database */
-      			upd_stmt.run( pageid, content, entry, function(err){ 
-      				packEntryList([entry], function(msg) {
-      					soc.emit('updateEntries', msg);
-      				});
-      			});
+      			
+      			/* load page revision information */
+				var rev_count = 0;
+				var all_revisions = [];
+				var first_edit, last_edit;
+				
+//				getRevisionInfo(myparams, function(revisions) {
+//				    if (revisions) {
+//				    	rev_count += revisions.length;
+//			
+//				    	if (last_edit == null)
+//				    		last_edit = revisions[0].timestamp;
+//				    	first_edit = revisions[revisions.length - 1].timestamp;
+//				    }
+//				}, function() { // finalcall function
+				
+					/* save the page content in the database */
+					upd_stmt.run( pageid, content, rev_count, first_edit, last_edit, entry, function(err){ 
+						packEntryList([entry], function(msg) {
+							soc.emit('updateEntries', msg);
+						});
+					});
+				
+//				});
+
       		});
 
         } else { /* page not found */
@@ -270,12 +298,12 @@ function insertSource(entry_name, src_entry, callback) {
 function finishSrcInsert(newEntries, updatedEntries, callback) {
 	if (updatedEntries.length > 0) 
 		packEntryList(updatedEntries, function(msg) {
-			console.log('updateEntries', msg);
+			//console.log('updateEntries', msg);
 			soc.emit('updateEntries', msg);
 		});
 	if (newEntries.length > 0)
 		packEntryList(newEntries, function(msg) {
-			console.log('addEntries', msg);
+			//console.log('addEntries', msg);
 			soc.emit('addEntries', msg);
 		});
 }
@@ -385,6 +413,25 @@ function handleLoadSubcats(entry, callback) {
 	});
 
 }
+
+/*** Page Revisions ***/
+function getRevisionInfo(params, callback, finalcall) {
+	client.api.call(params, function(info, next, data) {
+		var pageid = Object.keys(data.query.pages).shift();
+	    //console.log(data); //.query.pages[pageid].revisions);
+	
+		callback && callback(data.query.pages[pageid].revisions);
+	
+	    if (data["query-continue"] && data["query-continue"].revisions) {
+	    	params.rvcontinue = data["query-continue"].revisions.rvcontinue;
+	    	getRevisionInfo(params, callback, finalcall);
+	    } else {
+	    	finalcall && finalcall();
+	    }
+	});
+}
+
+
 
 /*** Launch Web Server ***/
 console.log("Open in your browser: http://localhost:" + srv_port);

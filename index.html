@@ -75,8 +75,8 @@
         			{{link this}}
     			{{/join}}
 			</td>
-			<td>{{link_count}} / {{mentions}}</td>
-			<td>{{dist}}</td>
+			<td>{{link_count}} / {{mentions}} / {{dist}}</td>
+			<td>{{rev_count}} / {{first_edit}} / {{last_edit}}</td>
 			<td><textarea id="comment-{{clean_id}}" class="form-control" rows="2" onkeydown="commentKeyEvent(event, '{{entry}}')">{{comment}}</textarea></td>
         </script>
         
@@ -134,9 +134,12 @@
 			
 			/* for the lists of sources */
             Handlebars.registerHelper( "join", function( array, sep, options ) {
-                return array.map(function( item ) {
-                    return options.fn( item );
-                }).join( sep );
+            	if (array)
+	                return array.map(function( item ) {
+	                    return options.fn( item );
+	                }).join( sep );
+            	else
+            		return '';
             });
 			
 			/* setup connection to servlets */
@@ -168,7 +171,7 @@
             	/* copy several important parameters from the old entry 
            		   if the entry alreay in the list */
            		if (entryMap[entry.entry]) {
-           			entry.index = entryMap[entry.entry].index
+           			entry.content_sz = entryMap[entry.entry].content_sz || 50
            		}
            		
            		return entry;
@@ -184,8 +187,9 @@
             }
             
             /* afix the table header to one place */
-   			$('#table-of-entries').floatThead({
-   				useAbsolutePositioning: false
+   			$('table-of-entries').floatThead({
+   				useAbsolutePositioning: false,
+   				scrollingTop: 100
    			});
 
 			function updateEntries(msg) {
@@ -296,8 +300,8 @@
 					<th>#</th>
                     <th>Entry</th>
                     <th>Sources</th>
-                    <th>outlinks / mentions</th>
-                    <th>dist</th>
+                    <th>out / in / dist</th>
+                    <th>rev# / 1st / last</th>
                     <th>Comment</th>
                 </tr>
             </thead>

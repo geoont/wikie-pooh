@@ -243,33 +243,6 @@ function setRootDist(entry, dist, callback) {
 	});
 }
 
-/**
- * Retrieve the pages that belong to a category
- * @param entry Wikipedia category name
- */
-function handleLoadSubcats(entry) {
-	
-	var category = entry.substring(cat_name.length);
-	
-	console.log("Retrieving category: " + category);
-	client.getPagesInCategory(category, function(pages) {
-
-		for (var i=0; i<pages.length; i++) {
-	        if (pages[i].title in r_entries) {}
-	        	/* increment count of sources for the entry */
-	        	/* add entry to update list */
-	        else {
-	        	/* insert new entry to the database */
-	        	/* add entry to new entry list */
-		    }
-			out_count++;
-		}
-
-		callback && callback();
-	});
-
-}
-
 var updcom_stmt = db.prepare("UPDATE entries SET comment = ? WHERE entry = ?");
 function handleUpdateComment(msg) {
 	console.log(msg);
@@ -285,30 +258,79 @@ var newsrc_stmt = db.prepare("INSERT INTO cat_src (entry, src_entry) VALUES (?, 
 function insertSource(entry_name, src_entry, callback) {
 	newsrc_stmt.run(entry_name, src_entry, function(err) {
 		if (err) console.log("already in DB: " + entry_name + " <- " +src_entry);
+		else console.log('new pair entity-source inserted: ' + entry_name + " <- " + src_entry);
 		callback && callback(entry_name, src_entry) ;
 	}); 
 }
 
-function finishSrcInsert(newEntries, updatedEntries) {
+function finishSrcInsert(newEntries, updatedEntries, callback) {
 	if (updatedEntries.length > 0) 
 		packEntryList(updatedEntries, function(msg) {
-			//console.log('updateEntries', msg);
+			console.log('updateEntries', msg);
 			soc.emit('updateEntries', msg);
 		});
 	if (newEntries.length > 0)
 		packEntryList(newEntries, function(msg) {
-			//console.log('addEntries', msg);
+			console.log('addEntries', msg);
 			soc.emit('addEntries', msg);
 		});
 }
 
-var getcont_stmt = db.prepare("SELECT content, link_count FROM entries WHERE entry = ?");
 var exists_stmt = db.prepare("SELECT entry FROM entries WHERE entry = ?");
 var newent_stmt = db.prepare("INSERT INTO entries (entry) VALUES (?)");
 
 var inclnk_stmt = db.prepare("UPDATE entries SET link_count = link_count + ? WHERE entry = ?");
 var incmnt_stmt = db.prepare("UPDATE entries SET mentions = mentions + ? WHERE entry = ?");
 
+/**
+ * Inserts a list fo new parsed out entries into a database, 
+ * performs all necessary checks, emits events for update and additions
+ * 
+ * @param cats a list of new parsed out entries
+ * @param src_entry_name the name of the entry the list was parsed out from (will be added to update list)
+ */
+function insertParsedEntries(cats, src_entry_name, callback) {
+	
+	/* increase link count */
+	inclnk_stmt.run(cats.length, src_entry_name, function(err, row) {
+	
+		var newEntries = [],
+			updatedEntries = [src_entry_name];
+		/* for each extracted category */
+		cats.forEach( function(mycat, i, ar)  {
+			
+			/* check if it already exists in the database */
+			exists_stmt.get( mycat, function(err, row) {
+				if (row) { /* entry already in the database */
+					console.log('existing entity updated: ' + mycat);
+					/* increase count of mentions */
+					incmnt_stmt.run(1, mycat, function(err, row) {
+						insertSource( mycat, src_entry_name, function(main_entry, src_entry) {
+							/* add to update list */
+							updatedEntries.push(main_entry);
+							if (updatedEntries.length + newEntries.length - 1 == cats.length) 
+								finishSrcInsert(newEntries, updatedEntries, callback);
+						});
+						
+					});
+				} else { /* entry is not in the database*/
+					/* insert entry into db */
+					newent_stmt.run(mycat, function(err) {
+						console.log('new entity created: ' + mycat);
+						insertSource( mycat, src_entry_name, function( main_entry, src_entry) {
+							/* add entry to new entries list */
+							newEntries.push(main_entry);
+							if (updatedEntries.length + newEntries.length - 1 == cats.length) 
+								finishSrcInsert(newEntries, updatedEntries, callback);
+						});
+					});
+				}
+			});
+		});
+	});
+}
+
+var getcont_stmt = db.prepare("SELECT content, link_count FROM entries WHERE entry = ?");
 var cat_re = new RegExp("\\[\\[(" + cat_name + "[^\\]\\|]+)(?:\\|[^\\]]+)?\\]\\]");
 
 /**
@@ -336,43 +358,25 @@ function handleParseEntry(entry_name) {
 		}
 		//console.log(cats);
 
-		/* increase link count */
-		inclnk_stmt.run(cats.length, entry_name, function(err, row) {
-
-			var newEntries = [],
-				updatedEntries = [entry_name];
-			/* for each extracted category */
-			cats.forEach( function(mycat, i, ar)  {
-				
-				/* check if it already exists in the database */
-				exists_stmt.get( mycat, function(err, row) {
-					if (row) { /* entry already in the database */
-						/* increase count of mentions */
-						incmnt_stmt.run(1, mycat, function(err, row) {
-							insertSource( mycat, entry_name, function(main_entry, src_entry) {
-								/* add to update list */
-								updatedEntries.push(main_entry);
-								if (updatedEntries.length + newEntries.length - 1 == cats.length) 
-									finishSrcInsert(newEntries, updatedEntries);
-							});
-							
-						});
-					} else { /* entry is not in the database*/
-						/* insert entry into db */
-						newent_stmt.run(mycat, function(err) {
-							insertSource( mycat, entry_name, function( main_entry, src_entry) {
-								/* add entry to new entries list */
-								newEntries.push(main_entry);
-								if (updatedEntries.length + newEntries.length - 1 == cats.length) 
-									finishSrcInsert(newEntries, updatedEntries);
-							});
-						});
-					}
-				});
-			});
-		});
-		
+		insertParsedEntries(cats, entry_name);
 	});
+}
+
+/**
+ * Retrieve the pages that belong to a category
+ * @param entry Wikipedia category name
+ */
+function handleLoadSubcats(entry, callback) {
+	
+	var category = entry.substring(cat_name.length);
+	
+	console.log("Retrieving category: " + category);
+	client.getPagesInCategory(category, function(pages) {
+		insertParsedEntries(pages.map(function(page) {
+			return page.title
+		}), entry, callback);
+	});
+
 }
 
 /*** Launch Web Server ***/

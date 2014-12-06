@@ -47,7 +47,7 @@
 							id="btn-load-{{clean_id}}" 
 							onClick="socket.emit('loadSubcats', '{{entry}}')"
 							{{#if link_count}}disabled{{/if}} 
-						>Load Subcats</button>
+						>Load Pages</button>
 					{{else}}
 						<button 
 							type="button" 
@@ -137,7 +137,7 @@
 			function fixEntry(entry) {
 				 
 				/* create a clean identifier for the entry that works with JQuery */ 
-				entry.clean_id = entry.entry.replace(/[()\s\.]/gi, '')
+				entry.clean_id = entry.entry.replace(/[()\s\.:]/gi, '')
 				
 				/* sets "not_found" flag */
           		if (entry.pageid && entry.pageid <= 1) 
@@ -174,7 +174,9 @@
 	           		msg[i] = fixEntry(msg[i]);
 					entryMap[msg[i].entry] = msg[i];
 					$("#tr-" + msg[i].clean_id).html(entryTemplate(msg[i]));
+					//console.log("Updated entry: " + msg[i].entry + " id:" + msg[i].clean_id);
 				}
+	            socket.emit('getPgtitle');
 			}
 			
             function showPgtitle(msg) {
@@ -182,7 +184,7 @@
                 $("#pgtitle").html(pgtitleTemplate(msg));
             }
             
-            socket.emit('getPgtitle');
+            socket.emit('getPgtitle'); /* must be the first signal sent */
             socket.emit('getEntryList');
             
             /**

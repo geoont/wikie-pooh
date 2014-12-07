@@ -134,6 +134,7 @@
 			
 			/* for the lists of sources */
             Handlebars.registerHelper( "join", function( array, sep, options ) {
+            	console.log(array);
             	if (array)
 	                return array.map(function( item ) {
 	                    return options.fn( item );

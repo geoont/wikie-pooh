@@ -110,11 +110,11 @@ function getEntryData(entry_name, callback) {
 		srcs_stmt.all(entry.entry, function(err, all_srcs) {
 			//console.log(all_srcs);
 			if (all_srcs.length > 0) {
-				var src_list = [];
-				for (var j = 0; j < all_srcs.length; j++) {
-					src_list.push( all_srcs[j].src_entry );
-				}
-				entry['sources'] = src_list;
+				entry['sources'] = all_srcs.map(function(item) {
+					return item.src_entry
+				}).filter( function(item) {
+					return item
+				});
 			}
 			//console.log(entry);
 			callback && callback(entry);

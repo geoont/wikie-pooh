@@ -240,10 +240,12 @@
             	var el = $('#comment-' + entryMap[entry_name].clean_id);
             	if (event.keyCode == 13) /* enter pressed */ {
             		/* change bg color to green */
+            		event.preventDefault();
             		el.css('background-color' , '#00FF00');
             		
             		/* send comment to server */
             		socket.emit('updateComment', { 'entry' : entry_name, 'comment' : el.val() });
+            		el.blur();
             	} else {
             		/* set backgorund to red */
             		el.css('background-color' , '#FF0000');

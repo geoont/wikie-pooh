@@ -202,6 +202,7 @@ var upd_stmt = db.prepare(
 			"last_edit = ? " +
 		"WHERE entry = ?"
 	);
+
 function handleLoadEntry(entry) {
 	console.log('load request for ' + entry);
 	
@@ -243,7 +244,7 @@ function handleLoadEntry(entry) {
 
         } else { /* page not found */
         	console.log('Page not found: ', entry, ' pageId:', pageid);
-  			upd_stmt.run( pageid, null, entry, function(err){ 
+  			upd_stmt.run( pageid, null, 0, 0, 0, entry, function(err){ 
   				packEntryList([entry], function(msg) {
   					soc.emit('updateEntries', msg);
   				});

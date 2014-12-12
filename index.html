@@ -24,7 +24,10 @@
         <script src="//cdnjs.cloudflare.com/ajax/libs/floatthead/1.2.8/jquery.floatThead.min.js"></script>
         
         <script id="entry-template" type="x-handlebars-template">
-			<td>{{rowid}}</td>
+			<td>
+				{{rowid}}
+				<input type="checkbox" onclick="ignoreClicked(this, '{{entry}}');" {{#if ign}}checked{{/if}}><br>
+			</td>
 			<td>
 				{{link entry}}
 				<button 
@@ -134,7 +137,7 @@
 			
 			/* for the lists of sources */
             Handlebars.registerHelper( "join", function( array, sep, options ) {
-            	console.log(array);
+            	//console.log(array);
             	if (array)
 	                return array.map(function( item ) {
 	                    return options.fn( item );
@@ -262,6 +265,9 @@
 				if (window.focus) {newwindow.focus()}
 			}
             
+            function ignoreClicked( inp, entry ) {
+				
+			}
         </script>
     </head>
     
@@ -300,8 +306,19 @@
             <table border="1" class="table table-bordered" id='table-of-entries'>
             <thead>
                 <tr>
-					<th>#</th>
-                    <th style="width:45%">Entry</th>
+					<th># ign</th>
+                    <th style="width:45%">
+                    	Entry 
+                    	<div style="float: right; clear: right; margin: 10px;">
+                    		<input id="new-entry" placeholder="New Entry">
+                    		<button 
+								type="button" 
+								class="btn btn-xs btn-default" 
+								id="new entry" 
+								onClick="socket.emit('newEntry', document.getElementById('new-entry').value )"
+							>Add</button>
+                    	</div>
+                    </th>
                     <th style="width:15%">Sources</th>
                     <th>out / in / dist</th>
                     <th>rev# / 1st / last</th>

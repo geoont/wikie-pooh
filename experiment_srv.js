@@ -54,6 +54,16 @@ var db = new sqlite3.Database(dbfile, sqlite3.OPEN_READWRITE, function(err) {
 	}
 });
 
+/* check if database structure should be updated */
+db.get("SELECT * FROM entries", function(err, row) {
+	if ('ign' in row) {
+		console.log("ign column detected, no update needed");
+	} else {
+		console.log("update: adding 'ign' column");
+		db.exec("ALTER TABLE entries ADD COLUMN ign BOOLEAN DEFAULT 0");
+	}
+});
+
 /* launch the main server */
 var srv_port = 8282;
 var http = require('http')
@@ -82,6 +92,7 @@ function onConnect(socket) {
     socket.on('parseEntry', handleParseEntry);
     socket.on('updateComment', handleUpdateComment);
     socket.on('loadSubcats', handleLoadSubcats);
+    socket.on('newEntry', handleNewEntry);
     soc = socket;
 }
 
@@ -432,7 +443,9 @@ function getRevisionInfo(params, callback, finalcall) {
 	});
 }
 
-
+function handleNewEntry(msg) {
+	console.log("New entry: " + msg);
+}
 
 /*** Launch Web Server ***/
 console.log("Open in your browser: http://localhost:" + srv_port);

@@ -93,6 +93,7 @@ function onConnect(socket) {
     socket.on('updateComment', handleUpdateComment);
     socket.on('loadSubcats', handleLoadSubcats);
     socket.on('newEntry', handleNewEntry);
+    socket.on('ignEntry', handleIgnEntry);
     soc = socket;
 }
 
@@ -445,6 +446,12 @@ function getRevisionInfo(params, callback, finalcall) {
 
 function handleNewEntry(msg) {
 	console.log("New entry: " + msg);
+}
+
+var ign_stmt = db.prepare("UPDATE entries SET ign = ? WHERE entry = ?");
+function handleIgnEntry(msg) {
+	console.log("Ign entry: " + msg.entry + "/" + msg.status);
+	ign_stmt.run(msg.status ? 1 : 0, msg.entry);
 }
 
 /*** Launch Web Server ***/

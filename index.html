@@ -83,6 +83,18 @@
 			<td><textarea id="comment-{{clean_id}}" class="form-control" rows="2" onkeydown="commentKeyEvent(event, '{{entry}}')">{{comment}}</textarea></td>
         </script>
         
+        <script id="ignored-entry-template" type="x-handlebars-template">
+			<td>
+				<input type="checkbox" onclick="ignoreClicked(this, '{{entry}}');" {{#if ign}}checked{{/if}}><br>
+			</td>
+			<td colspan="5">
+				<small>{{entry}}</small>
+				<div style="float: right; clear: right; margin: 0px;">
+					<small>{{comment}}</small>
+				</div>
+			</td>
+		</script>
+
         <script id="row-template" type="x-handlebars-template">
 	        <tr 
 				id="tr-{{clean_id}}" 
@@ -93,7 +105,11 @@
 					bgcolor="#FFFFFF"
 				{{/if}}
 			>
-				{{> entry_row}}
+				{{#if ign}}
+					{{> ignored_entry_row}}
+				{{else}}
+					{{> entry_row}}
+				{{/if}}
 			</tr>
         </script>
 
@@ -112,6 +128,10 @@
             var rowTemplateScript = $("#row-template").html(); 
             var rowTemplate = Handlebars.compile (rowTemplateScript); 
             Handlebars.registerPartial("entry_row", $("#entry-template").html());
+
+            var ignoredEntryTemplateScript = $("#ignored-entry-template").html(); 
+            var ignoredEntryTemplate = Handlebars.compile (ignoredEntryTemplateScript); 
+            Handlebars.registerPartial("ignored_entry_row", $("#ignored-entry-template").html());
 
             var entryTemplateScript = $("#entry-template").html(); 
             var entryTemplate = Handlebars.compile (entryTemplateScript); 
@@ -265,8 +285,16 @@
 				if (window.focus) {newwindow.focus()}
 			}
             
+            /**
+             * called when ignore check box is clicked in a row 
+             */
             function ignoreClicked( inp, entry ) {
-				
+				socket.emit( 'ignEntry', { 'entry' : entry, 'status' : inp.checked });	
+				entryMap[entry].ign = inp.checked ? 1 : null;
+				if (inp.checked)
+					$("#tr-" + entryMap[entry].clean_id).html(ignoredEntryTemplate(entryMap[entry]));
+				else
+					$("#tr-" + entryMap[entry].clean_id).html(entryTemplate(entryMap[entry]));
 			}
         </script>
     </head>

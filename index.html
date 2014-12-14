@@ -49,8 +49,23 @@
 							id="btn-load-{{clean_id}}" 
 							onClick="socket.emit('loadSubcats', '{{entry}}')"
 							{{#if parsed}}disabled{{/if}} 
+							{{#if not_found}}disabled{{/if}}
 						>Load Pages</button>
 					{{else}}
+						{{#unless dist}}
+							<button 
+								type="button" 
+								class="btn btn-xs btn-default" 
+								id="btn-mkcat-{{clean_id}}" 
+								onClick="mkCatClicked('{{entry}}')"
+							>MkCat</button>
+							<button 
+								type="button" 
+								class="btn btn-xs btn-default" 
+								id="btn-load-{{clean_id}}" 
+								onClick="mkSynClicked('{{entry}}')"
+							>MkSyn</button>
+						{{/unless}}
 						<button 
 							type="button" 
 							class="btn btn-xs btn-default" 
@@ -107,10 +122,14 @@
 	        <tr 
 				id="tr-{{clean_id}}" 
 				class="entry"
-				{{#if is_cat}}
-					bgcolor="#FFFFE6"
+				{{#if dist}}
+					{{#if is_cat}}
+						bgcolor="#FFFFE6"
+					{{else}}
+						bgcolor="#FFFFFF"
+					{{/if}}
 				{{else}}
-					bgcolor="#FFFFFF"
+					bgcolor="#E9FCE9"
 				{{/if}}
 			>
 				{{#if ign}}
@@ -312,6 +331,29 @@
 				else
 					$("#tr-" + entryMap[entry].clean_id).html(entryTemplate(entryMap[entry]));
 			}
+            
+            /**
+             * emit an event on "add" button pressed
+             */
+            function addClicked() {
+            	 socket.emit('newEntry', { 'entry' : document.getElementById('new-entry').value } )
+			}
+            
+            /**
+             * Creates a synonym 
+             */
+            function mkSynClicked( src ) {
+				var entry = window.prompt("Enter new entry name", src);
+				if (entry)
+		           	 socket.emit('newEntry', { 'entry' : entry, 'src' : src } )
+			}
+            
+            /**
+             * Creates a ctegory from an entry
+             */
+            function mkCatClicked( src ) {
+	           	 socket.emit('newEntry', { 'entry' : expInfo.cat_name + src, 'src' : src } )
+			}
         </script>
     </head>
     
@@ -359,7 +401,7 @@
 								type="button" 
 								class="btn btn-xs btn-default" 
 								id="new-entry" 
-								onClick="socket.emit('newEntry', document.getElementById('new-entry').value )"
+								onClick="addClicked()"
 							>Add</button>
                     	</div>
                     </th>

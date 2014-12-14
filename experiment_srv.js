@@ -408,11 +408,20 @@ function handleLoadSubcats(entry, callback) {
 	
 	console.log("Retrieving category: " + category);
 	client.getPagesInCategory(category, function(pages) {
-		insertParsedEntries(pages.map(function(page) {
-			return page.title
-		}), entry, callback);
+		console.log("Pages: ", pages);
+		if (pages.length > 0) {
+			insertParsedEntries(pages.map(function(page) {
+				return page.title
+			}), entry, callback);
+		} else {
+			console.log("Not found: " + entry);
+  			upd_stmt.run( -1, null, 0, 0, 0, entry, function(err){ 
+  				packEntryList([entry], function(msg) {
+  					soc.emit('updateEntries', msg);
+  				});
+  			});
+		}
 	});
-
 }
 
 /*** Page Revisions ***/
@@ -433,18 +442,34 @@ function getRevisionInfo(params, callback, finalcall) {
 }
 
 var newent_stmt = db.prepare("INSERT INTO entries (entry) VALUES (?)");
+var newsrc_stmt = db.prepare("INSERT INTO cat_src (entry, src_entry) VALUES (?, ?)");
+/**
+ * Adds a new entry to the database from WUI, sends an update or an error to WUI
+ * 
+ * @param msg { entry: entry_name, src : source_entry_name}
+ */
 function handleNewEntry(msg) {
-	var entry_name = msg.trim();
+	console.log("New entry", msg);
+	var entry_name = msg.entry.trim();
 	if (entry_name.length == 0) return;
-	console.log("New entry: " + entry_name);
 	newent_stmt.run(entry_name, function(err) {
 		if (err)
 			soc.emit('duplicateEntry', entry_name);
 		else {
-			packEntryList( [entry_name],
-				function(upd_entry_list) {
-					soc.emit('addEntries', upd_entry_list );
-			});
+			if (msg.src) { /* source entry has been specified */
+				newsrc_stmt.run(entry_name, msg.src, function(err) {
+					if (err) 
+						console.log("entry-source already exist: " + msg.src + " -> " + entry_name);
+					packEntryList( [entry_name],
+						function(upd_entry_list) {
+							soc.emit('addEntries', upd_entry_list );
+					});
+				})
+			} else
+				packEntryList( [entry_name],
+					function(upd_entry_list) {
+						soc.emit('addEntries', upd_entry_list );
+				});
 		}
 	});
 }

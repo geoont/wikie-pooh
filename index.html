@@ -78,7 +78,15 @@
 			</td>
 			<td>{{link_count}} / {{mentions}} / {{dist}}</td>
 			<td>{{rev_count}} / {{first_edit}} / {{last_edit}}</td>
-			<td><textarea id="comment-{{clean_id}}" class="form-control" rows="2" onkeydown="commentKeyEvent(event, '{{entry}}')">{{comment}}</textarea></td>
+			<td>
+				<textarea 
+					id="comment-{{clean_id}}" 
+					class="form-control" 
+					rows="2" 
+					oninput="this.style.backgroundColor='#FF0000'"
+					onkeydown="commentKeyEvent(event, '{{entry}}')" 
+				>{{comment}}</textarea>
+			</td>
         </script>
         
         <script id="ignored-entry-template" type="x-handlebars-template">
@@ -280,9 +288,6 @@
             		/* send comment to server */
             		socket.emit('updateComment', { 'entry' : entry_name, 'comment' : el.val() });
             		el.blur();
-            	} else {
-            		/* set backgorund to red */
-            		el.css('background-color' , '#FF0000');
             	}
             }
             

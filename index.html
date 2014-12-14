@@ -21,8 +21,6 @@
         <!-- Latest compiled and minified JavaScript -->
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
 
-        <script src="//cdnjs.cloudflare.com/ajax/libs/floatthead/1.2.8/jquery.floatThead.min.js"></script>
-        
         <script id="entry-template" type="x-handlebars-template">
 			<td>
 				{{rowid}}
@@ -75,7 +73,7 @@
 			</td>
 			<td>
 			    {{#join sources ", "}}
-        			{{link this}}
+        			{{pagelink this}}
     			{{/join}}
 			</td>
 			<td>{{link_count}} / {{mentions}} / {{dist}}</td>
@@ -88,10 +86,12 @@
 				<input type="checkbox" onclick="ignoreClicked(this, '{{entry}}');" {{#if ign}}checked{{/if}}><br>
 			</td>
 			<td colspan="5">
-				<small>{{entry}}</small>
-				<div style="float: right; clear: right; margin: 0px;">
-					<small>{{comment}}</small>
-				</div>
+				<font color="DarkSeaGreen">
+					<small>{{entry}}</small>
+					<div style="float: right; clear: right; margin: 0px;">
+						<small>{{comment}}</small>
+					</div>
+				</font>
 			</td>
 		</script>
 
@@ -121,7 +121,14 @@
         
         <script>
         
-        	var expInfo; /* general information about the experiment */
+			/** hash of all entries */
+			var entryMap = [];
+		    
+			/** general information about the experiment */
+        	var expInfo; 
+			
+			/** regular expression for cleaning entry names to be used with HTML ids */
+			var clean_re = /[()\s\.:]/gi;
         	
         	/* Handlebars templates */
         	
@@ -145,6 +152,14 @@
 
   				return new Handlebars.SafeString(
     				"<a href=\"javascript:popwin('" + url + "');\">" + text + "</a>"
+  				);
+			});
+			
+            Handlebars.registerHelper('pagelink', function(entry) {
+  				var text = Handlebars.escapeExpression(entry);
+
+  				return new Handlebars.SafeString(
+    				"<a href=\"#tr-" + entry.replace(clean_re, '') + "\">" + text + "</a>"
   				);
 			});
 			
@@ -174,19 +189,17 @@
             socket.on("addEntries", addEntries);
             socket.on("updateEntries", updateEntries);
             socket.on("duplicateEntry", function(entry) {
-				alert("Duplicate Entry: " + entry)
+				alert("Duplicate Entry: " + entry);
+            	window.location.hash = 'tr-' + entryMap[entry].clean_id;
 			});
 
-			/** hash of all entries */
-			var entryMap = [];
-			     	   
 			/**
 			 * Adds entry fiields that are neccessary for page operation.
 			 */
 			function fixEntry(entry) {
 				 
 				/* create a clean identifier for the entry that works with JQuery */ 
-				entry.clean_id = entry.entry.replace(/[()\s\.:]/gi, '')
+				entry.clean_id = entry.entry.replace(clean_re, '')
 				
 				/* sets "not_found" flag */
           		if (entry.pageid && entry.pageid <= 1) 
@@ -211,14 +224,9 @@
             		entryMap[msg[i].entry] = msg[i];
 	                $("#entry-table-body").append(rowTemplate(msg[i]));
             	}
+            	window.location.hash = 'tr-' + msg[0].clean_id;
             }
             
-            /* afix the table header to one place */
-   			$('table-of-entries').floatThead({
-   				useAbsolutePositioning: false,
-   				scrollingTop: 100
-   			});
-
 			function updateEntries(msg) {
 				for (var i = 0; i < msg.length; i++) {
 	           		msg[i] = fixEntry(msg[i]);
@@ -305,7 +313,7 @@
     <body role="document">
 
     <!-- Fixed navbar -->
-    <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+    <nav class="navbar navbar-inverse navbar-static" role="navigation">
     <!-- nav class="navbar navbar-default" role="navigation" -->
       <div class="container">
         <div class="navbar-header">
@@ -334,7 +342,7 @@
         </div>
         
         <div id="entryTable">
-            <table border="1" class="table table-bordered" id='table-of-entries'>
+            <table border="1" class="table table-bordered header-fixed" id='table-of-entries'>
             <thead>
                 <tr>
 					<th># ign</th>

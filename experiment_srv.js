@@ -1,5 +1,5 @@
 /**
- * Server with experiment results
+ * Fixes experiment database
  */
 
 /* process arguments */
@@ -7,7 +7,7 @@
 
 var args = process.argv.slice(2);
 if (args.length != 2) {
-	console.error("usage: node " + process.argv[1] + " <language> <input_list.cats>\n" +
+	console.error("usage: node " + process.argv[1] + " <language> <expertiment.sqlite3>\n" +
 		"  where\n    <language> is Wikipedia language code (en, zh, ru, etc.)\n" +
 		"    <expertiment.sqlite3> sqlite 3 database to be created\n") ;
 	process.exit(1);
@@ -54,15 +54,8 @@ var db = new sqlite3.Database(dbfile, sqlite3.OPEN_READWRITE, function(err) {
 	}
 });
 
-/* check if database structure should be updated */
-db.get("SELECT * FROM entries", function(err, row) {
-	if ('ign' in row) {
-		console.log("ign column detected, no update needed");
-	} else {
-		console.log("update: adding 'ign' column");
-		db.exec("ALTER TABLE entries ADD COLUMN ign BOOLEAN DEFAULT 0");
-	}
-});
+sqlite3.verbose();
+//db.on('trace', function(sql) { console.log(sql); });
 
 /* launch the main server */
 var srv_port = 8282;
@@ -114,7 +107,8 @@ function getEntryData(entry_name, callback) {
 		
 		if (!entry) {
 			console.trace ('internal error: failed to retrieve entry "' + entry_name + '"');
-			process.exit();
+			callback && callback(entry);
+			return;
 		}
 		
 		/* reduce content size to 1024 characters */
@@ -309,10 +303,14 @@ function finishSrcInsert(newEntries, updatedEntries, callback) {
 		});
 }
 
-var exists_stmt = db.prepare("SELECT entry, dist FROM entries WHERE entry = ?");
-var newent_stmt = db.prepare("INSERT INTO entries (entry, dist, mentions) VALUES (?, ?, 1)");
+var exists_stmt = db.prepare("SELECT entry, dist, parsed, cats_loaded FROM entries WHERE entry = ?");
+var newent_stmt = db.prepare("INSERT INTO entries (entry) VALUES (?)");
+var upddist_stmt = db.prepare("UPDATE entries SET dist = ?, mentions = 1 WHERE entry = ?");
 
-var inclnk_stmt = db.prepare("UPDATE entries SET link_count = link_count + ?, parsed = 1 WHERE entry = ?");
+// the following statement does not work due to possible bug in sqlite
+// var newent_stmt = db.prepare("INSERT INTO entries (entry, dist, mentions) VALUES (?, ?, 1)");
+
+var inclnk_stmt = db.prepare("UPDATE entries SET link_count = link_count + ?, parsed = ?, cats_loaded = ? WHERE entry = ?");
 var incmnt_stmt = db.prepare("UPDATE entries SET mentions = mentions + 1, dist = ? WHERE entry = ?");
 
 /**
@@ -321,15 +319,27 @@ var incmnt_stmt = db.prepare("UPDATE entries SET mentions = mentions + 1, dist =
  * 
  * @param cats a list of new parsed out entries
  * @param src_entry_name the name of the entry the list was parsed out from (will be added to update list)
+ * @params how how the list was obtained ('parsed' or 'cats_loaded')
  */
-function insertParsedEntries(cats, src_entry_name, callback) {
+function insertParsedEntries(cats, src_entry_name, how, callback) {
 	
 	/* retrieve source entry distance */
 	exists_stmt.get( src_entry_name, function(err, dist_row) {
 		var src_dist = dist_row.dist;
 		
+		switch (how) {
+		case 'parsed':
+			dist_row.parsed = 1
+			break;
+		case 'cats_loaded':
+			dist_row.cats_loaded = 1;
+			break;
+		default:
+			console.log('Unable to understand how method ', how)
+			break;
+		}
 		/* increase link count */
-		inclnk_stmt.run(cats.length, src_entry_name, function(err) {
+		inclnk_stmt.run(cats.length, dist_row.parsed, dist_row.cats_loaded, src_entry_name, function(err) {
 		
 			var newEntries = [],
 				updatedEntries = [src_entry_name];
@@ -341,7 +351,7 @@ function insertParsedEntries(cats, src_entry_name, callback) {
 					if (row) { /* entry already in the database */
 						console.log('existing entity updated: ' + mycat);
 						/* increase count of mentions, update distance only if current distance is less than the stored distance */
-						incmnt_stmt.run( row.dist > src_dist + 1 ? src_dist + 1 : row.dist, mycat, function(err, row) {
+						incmnt_stmt.run( [row.dist > src_dist + 1 ? src_dist + 1 : row.dist, mycat] , function(err, row) {
 							insertSource( mycat, src_entry_name, function(main_entry, src_entry) {
 								/* add to update list */
 								updatedEntries.push(main_entry);
@@ -351,8 +361,16 @@ function insertParsedEntries(cats, src_entry_name, callback) {
 						});
 					} else { /* entry is not in the database*/
 						/* insert entry into db */
-						newent_stmt.run(mycat, src_dist + 1, function(err) {
+						db.serialize(function() {
+							console.log('inserting new entity: ', [mycat, src_dist + 1] );
+							newent_stmt.run( mycat, function(err) {
+//								newent_stmt.run( mycat, src_dist + 1, function(err) {
+								if (err) console.log("Failed to create entity: " + mycat, err);
+							});
 							console.log('new entity created: ' + mycat);
+							upddist_stmt.run( src_dist + 1, mycat, function(err) {
+								if (err) console.log("Failed to set dist on entity=" + mycat + " dist=", (src_dist + 1), err);
+							});
 							insertSource( mycat, src_entry_name, function( main_entry, src_entry) {
 								/* add entry to new entries list */
 								newEntries.push(main_entry);
@@ -394,7 +412,7 @@ function handleParseEntry(entry_name) {
 		}
 		//console.log(cats);
 
-		insertParsedEntries(cats, entry_name);
+		insertParsedEntries(cats, entry_name, 'parsed');
 	});
 }
 
@@ -412,7 +430,7 @@ function handleLoadSubcats(entry, callback) {
 		if (pages.length > 0) {
 			insertParsedEntries(pages.map(function(page) {
 				return page.title
-			}), entry, callback);
+			}), entry, 'cats_loaded', callback);
 		} else {
 			console.log("Not found: " + entry);
   			upd_stmt.run( -1, null, 0, 0, 0, entry, function(err){ 

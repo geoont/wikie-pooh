@@ -48,8 +48,8 @@
 							class="btn btn-xs btn-default" 
 							id="btn-load-{{clean_id}}" 
 							onClick="socket.emit('loadSubcats', '{{entry}}')"
-							{{#if parsed}}disabled{{/if}} 
 							{{#if not_found}}disabled{{/if}}
+							{{#if cats_loaded}}disabled{{/if}}
 						>Load Pages</button>
 					{{else}}
 						{{#unless dist}}
@@ -66,23 +66,23 @@
 								onClick="mkSynClicked('{{entry}}')"
 							>MkSyn</button>
 						{{/unless}}
-						<button 
-							type="button" 
-							class="btn btn-xs btn-default" 
-							id="btn-load-{{clean_id}}" 
-							onClick="socket.emit('loadEntry', '{{entry}}')"
-							{{#if content}}disabled{{/if}} 
-							{{#if not_found}}disabled{{/if}} 
-						>Load</button>
-						<button 
-							type="button" 
-							class="btn btn-xs btn-default" 
-							id="btn-parse-{{clean_id}}" 
-							onClick="socket.emit('parseEntry', '{{entry}}')"
-							{{#unless content}}disabled{{/unless}} 
-							{{#if parsed}}disabled{{/if}} 
-						>Parse</button>
 					{{/if}}
+					<button 
+						type="button" 
+						class="btn btn-xs btn-default" 
+						id="btn-load-{{clean_id}}" 
+						onClick="socket.emit('loadEntry', '{{entry}}')"
+						{{#if content}}disabled{{/if}} 
+						{{#if not_found}}disabled{{/if}} 
+					>Load</button>
+					<button 
+						type="button" 
+						class="btn btn-xs btn-default" 
+						id="btn-parse-{{clean_id}}" 
+						onClick="socket.emit('parseEntry', '{{entry}}')"
+						{{#unless content}}disabled{{/unless}} 
+						{{#if parsed}}disabled{{/if}} 
+					>Parse</button>
 				</div>
 				<div id="content-{{clean_id}}">{{first50 content}}</div>
 			</td>

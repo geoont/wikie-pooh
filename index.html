@@ -173,6 +173,9 @@
             socket.on("pgtitle", showPgtitle);
             socket.on("addEntries", addEntries);
             socket.on("updateEntries", updateEntries);
+            socket.on("duplicateEntry", function(entry) {
+				alert("Duplicate Entry: " + entry)
+			});
 
 			/** hash of all entries */
 			var entryMap = [];
@@ -342,7 +345,7 @@
                     		<button 
 								type="button" 
 								class="btn btn-xs btn-default" 
-								id="new entry" 
+								id="new-entry" 
 								onClick="socket.emit('newEntry', document.getElementById('new-entry').value )"
 							>Add</button>
                     	</div>

@@ -112,8 +112,10 @@ function getEntryData(entry_name, callback) {
 	
 	ent1_stmt.get( entry_name, function(err, entry) {
 		
-		if (!entry)
-			console.trace ('failed to retrieve entry "' + entry_name + '"');
+		if (!entry) {
+			console.trace ('internal error: failed to retrieve entry "' + entry_name + '"');
+			process.exit();
+		}
 		
 		/* reduce content size to 1024 characters */
 		if (entry.content && entry.content.length > 1024)
@@ -182,20 +184,6 @@ function handlePgtitleRequest() {
 			'srv' : wiki_srv,
 			'uri' : wiki_uri,
 			'cat_name' : cat_name /* the word 'category' in the respective language */
-		});
-	});
-}
-
-/**
- * Handles update entry request, can be called by other handles
- * @param entry
- */
-function handleUpdateEntry(entry_name) {
-	//console.log(entry_name)
-	ent1_stmt.get(entry_name, function(err, entry) {
-		getEntryData(entry, function() {
-			//console.log(entry)
-			soc.emit("updateEntries", entry);
 		});
 	});
 }
@@ -444,8 +432,21 @@ function getRevisionInfo(params, callback, finalcall) {
 	});
 }
 
+var newent_stmt = db.prepare("INSERT INTO entries (entry) VALUES (?)");
 function handleNewEntry(msg) {
-	console.log("New entry: " + msg);
+	var entry_name = msg.trim();
+	if (entry_name.length == 0) return;
+	console.log("New entry: " + entry_name);
+	newent_stmt.run(entry_name, function(err) {
+		if (err)
+			soc.emit('duplicateEntry', entry_name);
+		else {
+			packEntryList( [entry_name],
+				function(upd_entry_list) {
+					soc.emit('addEntries', upd_entry_list );
+			});
+		}
+	});
 }
 
 var ign_stmt = db.prepare("UPDATE entries SET ign = ? WHERE entry = ?");

@@ -327,6 +327,7 @@ function insertParsedEntries(cats, src_entry_name, how, callback) {
 	exists_stmt.get( src_entry_name, function(err, dist_row) {
 		var src_dist = dist_row.dist;
 		
+		/* overide the method how this entity was created */
 		switch (how) {
 		case 'parsed':
 			dist_row.parsed = 1

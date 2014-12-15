@@ -112,7 +112,10 @@
 				<font color="DarkSeaGreen">
 					<small>{{entry}}</small>
 					<div style="float: right; clear: right; margin: 0px;">
-						<small>{{comment}}</small>
+						<small>
+							{{#if not_found}}<font color="red">not found</font> ({{pageid}}){{/if}}
+							{{comment}}
+						</small>
 					</div>
 				</font>
 			</td>
@@ -307,6 +310,7 @@
             		/* send comment to server */
             		socket.emit('updateComment', { 'entry' : entry_name, 'comment' : el.val() });
             		el.blur();
+            		entryMap[entry_name].comment = el.val();
             	}
             }
             

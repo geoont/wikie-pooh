@@ -51,6 +51,13 @@
 							{{#if not_found}}disabled{{/if}}
 							{{#if cats_loaded}}disabled{{/if}}
 						>Load Pages</button>
+						<button 
+							type="button" 
+							class="btn btn-xs btn-default" 
+							id="btn-rmcat-{{clean_id}}" 
+							onClick="rmCat('{{entry}}')"
+							{{#if not_found}}disabled{{/if}}
+						>rmCat</button>
 					{{else}}
 						{{#unless dist}}
 							<button 
@@ -162,7 +169,7 @@
         	var expInfo; 
 			
 			/** regular expression for cleaning entry names to be used with HTML ids */
-			var clean_re = /[()\s\.:\']/gi;
+			var clean_re = /[()\s\.:\',]/gi;
         	
         	/* Handlebars templates */
         	
@@ -406,6 +413,15 @@
              */
             function mkCatClicked( src ) {
 	           	 socket.emit('newEntry', { 'entry' : expInfo.cat_name + src, 'src' : src } )
+			}
+            
+            /**
+             * Creates an entry out of category with categiry removed
+             */
+            function rmCat(src) {
+				var entry = window.prompt("Enter new entry name", src.substring(expInfo.cat_name.length));
+				if (entry)
+	       			socket.emit('newEntry', { 'entry' : entry, 'src' : src } )
 			}
         </script>
     </head>

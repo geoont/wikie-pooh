@@ -40,6 +40,8 @@ var db = new sqlite3.Database(dbfile, sqlite3.OPEN_READWRITE, function(err) {
 	}
 });
 
+db.serialize();
+
 /* check if database structure should be updated */
 db.get("SELECT * FROM entries", function(err, row) {
 	if ('ign' in row) {
@@ -55,5 +57,6 @@ db.get("SELECT * FROM entries", function(err, row) {
 		db.exec("ALTER TABLE entries ADD COLUMN cats_loaded BOOLEAN DEFAULT 0");
 	}
 });
+//.exec("UPDATE entries SET entry = replace(entry, '''', '&#39;')");
 
 /* THE END */

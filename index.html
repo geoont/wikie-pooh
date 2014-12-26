@@ -233,11 +233,17 @@
 				alert("Duplicate Entry: " + entry);
             	window.location.hash = 'tr-' + entryMap[entry].clean_id;
 			});
+			
+			/* heartbeat check */
 			socket.on('connect', function () {
-			  	$('#quitButton').prop("disabled",false);
+				var qb = $('#quitButton');
+			  	qb.html('Srv Quit');
+			  	qb.prop("disabled",false);
 			});
 			socket.on('disconnect', function () {
-			  	$('#quitButton').prop("disabled",true);
+				var qb = $('#quitButton');
+				qb.html('Srv Down');
+			  	qb.prop("disabled",true);
 			});
 
 			/**
@@ -453,7 +459,7 @@
             <li class="active"><a href="#page-top">Top</a></li>
             <li><a href="#page-bottom">Bottom</a></li>
           </ul>
-          <button id="quitButton" class="btn btn-default" onclick="socket.emit('quit')">Quit Srv</button>
+          <button id="quitButton" class="btn btn-default" onclick="socket.emit('quit')" disabled>Starting...</button>
         </div><!--/.nav-collapse -->
       </div>
     </nav>

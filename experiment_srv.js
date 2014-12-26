@@ -87,7 +87,10 @@ function onConnect(socket) {
     socket.on('loadSubcats', handleLoadSubcats);
     socket.on('newEntry', handleNewEntry);
     socket.on('ignEntry', handleIgnEntry);
-    socket.on('quit', function() { process.exit(0); } );
+    socket.on('quit', function() { 
+    	console.log("quit from client"); 
+    	process.exit(0); 
+    } );
     soc = socket;
 }
 

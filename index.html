@@ -170,7 +170,7 @@
 			
 			/** regular expression for cleaning entry names to be used with HTML ids */
 			var clean_re = /[()\s\.:\',]/gi;
-        	
+			
         	/* Handlebars templates */
         	
             var rowTemplateScript = $("#row-template").html(); 
@@ -232,6 +232,12 @@
             socket.on("duplicateEntry", function(entry) {
 				alert("Duplicate Entry: " + entry);
             	window.location.hash = 'tr-' + entryMap[entry].clean_id;
+			});
+			socket.on('connect', function () {
+			  	$('#quitButton').prop("disabled",false);
+			});
+			socket.on('disconnect', function () {
+			  	$('#quitButton').prop("disabled",true);
 			});
 
 			/**
@@ -423,6 +429,7 @@
 				if (entry)
 	       			socket.emit('newEntry', { 'entry' : entry, 'src' : src } )
 			}
+			
         </script>
     </head>
     
@@ -446,6 +453,7 @@
             <li class="active"><a href="#page-top">Top</a></li>
             <li><a href="#page-bottom">Bottom</a></li>
           </ul>
+          <button id="quitButton" class="btn btn-default" onclick="socket.emit('quit')">Quit Srv</button>
         </div><!--/.nav-collapse -->
       </div>
     </nav>

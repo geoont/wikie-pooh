@@ -20,7 +20,13 @@
         
         <!-- Latest compiled and minified JavaScript -->
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
-
+        
+        <style>
+	        body {
+				padding-top: 50px;
+			}
+        </style>
+        
         <script id="entry-template" type="x-handlebars-template">
 			<td>
 				{{rowid}}
@@ -130,7 +136,7 @@
 		</script>
 
         <script id="row-template" type="x-handlebars-template">
-	        <tr 
+	        <tr
 				id="tr-{{clean_id}}" 
 				class="entry"
 				{{#if dist}}
@@ -159,7 +165,12 @@
         
         <script>
         
-			/** hash of all entries */
+        	/** this code properly positions the anchor under the fixed navbar */
+			var shiftWindow = function() { scrollBy(0, -50) };
+    		window.addEventListener("hashchange", shiftWindow);
+    		function load() { if (window.location.hash) shiftWindow(); }
+    
+    		/** hash of all entries */
 			var entryMap = [];
 
 			/** list of uniq comments */
@@ -442,7 +453,8 @@
     <body role="document">
 
     <!-- Fixed navbar -->
-    <nav class="navbar navbar-inverse navbar-static" role="navigation">
+    <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <!--  nav class="navbar navbar-inverse navbar-static" role="navigation" -->
     <!-- nav class="navbar navbar-default" role="navigation" -->
       <div class="container">
         <div class="navbar-header">
@@ -459,7 +471,9 @@
             <li class="active"><a href="#page-top">Top</a></li>
             <li><a href="#page-bottom">Bottom</a></li>
           </ul>
-          <button id="quitButton" class="btn btn-default" onclick="socket.emit('quit')" disabled>Starting...</button>
+          <ul class="nav navbar-nav navbar-right">
+	          <button id="quitButton" class="btn btn-default navbar-btn" onclick="socket.emit('quit')" disabled>Starting...</button>
+		  </ul>
         </div><!--/.nav-collapse -->
       </div>
     </nav>

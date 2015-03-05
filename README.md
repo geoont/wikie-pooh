@@ -24,6 +24,15 @@ if any dependencies are missing simply install them with npm install.
 
 ## Usage
 
+### Interactive Server-based Version
+
+1. Initialize new experiment: ```nodejs ../experiment_init.js 0.cat npp.sqlite3``` where ```0.cat``` is a list of initial categories with one category per line and npp.sqlite3 is a new database
+2. Update database to current version: ```node ../experiment_fix.js en npp.sqlite3``` (may not be needed but it won't break the database)
+3. Launch the server: ```node ../experiment_srv.js en npp.sqlite3```
+4. Open in the browser: http://localhost:8282
+
+### Old Text File based Version 
+
  * To see the content of a Wikipedia page run: ```node retrieve-page.njs zh 山``` (set language and page name accordingly).  
  * To retrieve a list of categories and relevant pages run: ```node retrieve-cats.njs en 0.cats``` where en is the language and 0.cats is a file with initial list of pages and categories.  This will produce a new file 1.cats (or higher number) with a list of pages and categories retrieved based on the original list.  All files are tab-delimited and can be opened in a spreadsheet.
   * output file can be edited to remove irrelevant entries which can be either commented out using # symbol or placed on the ignore list by entering dash (```-```) in into the first column

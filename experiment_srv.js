@@ -204,7 +204,7 @@ var upd_stmt = db.prepare(
 function handleLoadEntry(entry) {
 	console.log('load request for ' + entry);
 	
-    client.api.call({action:'query', titles:entry}, function(info, next, data) {
+    client.api.call({action:'query', titles:entry}, function(err, info, next, data) {
 
         /* check if the page exists */
         var pageid = Object.keys(data.query.pages).shift();

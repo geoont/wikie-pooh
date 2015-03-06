@@ -244,6 +244,9 @@
 				alert("Duplicate Entry: " + entry);
             	window.location.hash = 'tr-' + entryMap[entry].clean_id;
 			});
+			socket.on("errRetrieve", function(msg) {
+				alert("Error Retrieving Entry '" + msg['entry'] + "' Error: " + msg['error']);
+			});
 			
 			/* heartbeat check */
 			socket.on('connect', function () {

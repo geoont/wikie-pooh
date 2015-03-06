@@ -47,6 +47,7 @@ var client = new bot({
 /* open the database */
 var sqlite3 = require('sqlite3').verbose();
 console.log("Opening database: " + dbfile);
+console.log("Using server: " + wiki_srv);
 var db = new sqlite3.Database(dbfile, sqlite3.OPEN_READWRITE, function(err) {
 	if (err) {
 		console.error('Unable to connect to database: ' + err);
@@ -209,9 +210,12 @@ function handleLoadEntry(entry) {
         /* check if the page exists */
         var pageid = Object.keys(data.query.pages).shift();
 
-        if (pageid > 1) { /* other pageid indicate that the page does not exist or other error */
+        if (err) {
+        	console.log('Error retrieving page ', entry, ' err:', err);
+			soc.emit('errRetrieve', { 'entry' : entry, 'err' : err});
+        } else if (pageid > 1) { /* other pageid indicate that the page does not exist or other error */
 
-        	client.getArticle(entry, function(content) {
+        	client.getArticle(entry, function(err, content) {
       			console.log('Downloaded %s (%s): %s...', entry, pageid, content.substr(0, 25).replace(/\n/g, ' '));
       			
       			/* load page revision information */
@@ -430,7 +434,7 @@ function handleLoadSubcats(entry, callback) {
 	var category = entry.substring(cat_name.length);
 	
 	console.log("Retrieving category: " + category);
-	client.getPagesInCategory(category, function(pages) {
+	client.getPagesInCategory(category, function(err, pages) {
 		console.log("Pages: ", pages);
 		if (pages.length > 0) {
 			insertParsedEntries(pages.map(function(page) {
@@ -449,7 +453,7 @@ function handleLoadSubcats(entry, callback) {
 
 /*** Page Revisions ***/
 function getRevisionInfo(params, callback, finalcall) {
-	client.api.call(params, function(info, next, data) {
+	client.api.call(params, function(err, info, next, data) {
 		var pageid = Object.keys(data.query.pages).shift();
 	    //console.log(data); //.query.pages[pageid].revisions);
 	

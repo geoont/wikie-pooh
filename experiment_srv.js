@@ -6,7 +6,7 @@
 'use strict';
 
 var args = process.argv.slice(2);
-if (args.length != 2) {
+if (args.length !== 2) {
 	console.error("usage: node " + process.argv[1] + " <language> <expertiment.sqlite3>\n" +
 		"  where\n    <language> is Wikipedia language code (en, zh, ru, etc.)\n" +
 		"    <expertiment.sqlite3> sqlite 3 database to be created\n") ;
@@ -60,9 +60,9 @@ sqlite3.verbose();
 
 /* launch the main server */
 var srv_port = 8282;
-var http = require('http')
-var finalhandler = require('finalhandler')
-var serveStatic = require('serve-static')
+var http = require('http');
+var finalhandler = require('finalhandler');
+var serveStatic = require('serve-static');
 
 /* Serve up public/ftp folder */
 var serve = serveStatic('.', {'index': ['index.html', 'index.htm']})
@@ -70,9 +70,9 @@ var serve = serveStatic('.', {'index': ['index.html', 'index.htm']})
 /* Create server */
 var server = http.createServer(function(req, res){
   console.log('HTTP request: ' + req.url);
-  var done = finalhandler(req, res)
-  serve(req, res, done)
-})
+  var done = finalhandler(req, res);
+  serve(req, res, done);
+});
 
 var io = require('socket.io').listen(server);
 io.sockets.on('connection', onConnect);
@@ -88,9 +88,9 @@ function onConnect(socket) {
     socket.on('loadSubcats', handleLoadSubcats);
     socket.on('newEntry', handleNewEntry);
     socket.on('ignEntry', handleIgnEntry);
-    socket.on('quit', function() { 
-    	console.log("quit from client"); 
-    	process.exit(0); 
+    socket.on('quit', function() {
+    	console.log("quit from client");
+    	process.exit(0);
     } );
     soc = socket;
 }
@@ -102,45 +102,45 @@ var ent1_stmt = db.prepare("SELECT rowid, * FROM entries WHERE entry = ?");
 
 /**
  * Queries the database to retrieve information about specific entry.
- * 
+ *
  * @param entry_name entry name to get the data
  * @param callback (entry)
  */
 function getEntryData(entry_name, callback) {
-	
+
 	ent1_stmt.get( entry_name, function(err, entry) {
-		
+
 		if (!entry) {
 			console.trace ('internal error: failed to retrieve entry "' + entry_name + '"');
 			callback && callback(entry);
 			return;
 		}
-		
+
 		/* reduce content size to 1024 characters */
 		if (entry.content && entry.content.length > 1024)
 			entry.content = entry.content.substring(0, 1024) + '...';
-		
+
 		srcs_stmt.all(entry.entry, function(err, all_srcs) {
 			//console.log(all_srcs);
 			if (all_srcs.length > 0) {
-				entry['sources'] = all_srcs.map(function(item) {
-					return item.src_entry
+				entry.sources = all_srcs.map(function(item) {
+					return item.src_entry;
 				}).filter( function(item) {
-					return item
+					return item;
 				});
 			}
 			//console.log(entry);
 			callback && callback(entry);
 		});
-		
+
 	});
-	
+
 }
 
 /**
  * Converts a list of entries to the JSON structure for sending to the client
- * 
- * @param entry_names list of entry_names 
+ *
+ * @param entry_names list of entry_names
  * @param callback will be called with a hash array of entries as its argument
  */
 function packEntryList(entry_names, callback) {
@@ -148,7 +148,7 @@ function packEntryList(entry_names, callback) {
 	entry_names.forEach( function( entry_name, i ) {
 		getEntryData(entry_name, function(entry) {
 			entry_list.push(entry);
-			if (entry_names.length == entry_list.length)
+			if (entry_names.length === entry_list.length)
 				callback && callback(entry_list);
 		});
 	});
@@ -156,18 +156,18 @@ function packEntryList(entry_names, callback) {
 
 var ents_stmt = db.prepare("SELECT rowid, entry FROM entries ORDER BY rowid");
 /**
- * Send a list of Wikipedia entries to the browser 
+ * Send a list of Wikipedia entries to the browser
  */
 function handleEntryListRequest() {
 	//console.log('Entry list request, sending ' + entryList);
 	ents_stmt.all( function(err, entry_list) {
 		packEntryList(
 			entry_list.map( function(entry){
-				return entry.entry
-			}), 
+				return entry.entry;
+			}),
 			function(upd_entry_list) {
 				soc.emit('addEntries', upd_entry_list );
-			})
+			});
 	});
 }
 
@@ -176,9 +176,9 @@ function handleEntryListRequest() {
  */
 function handlePgtitleRequest() {
 	db.get("SELECT count(*) AS cnt FROM entries", function(err, row) {
-		soc.emit('pgtitle', { 
-			'name' : dbfile, 
-			'lang' : lang, 
+		soc.emit('pgtitle', {
+			'name' : dbfile,
+			'lang' : lang,
 			'entry_count' : (row ? row.cnt : 0),
 			'srv' : wiki_srv,
 			'uri' : wiki_uri,
@@ -204,7 +204,7 @@ var upd_stmt = db.prepare(
 
 function handleLoadEntry(entry) {
 	console.log('load request for ' + entry);
-	
+
     client.api.call({action:'query', titles:entry}, function(err, info, next, data) {
 
         /* check if the page exists */
@@ -217,57 +217,57 @@ function handleLoadEntry(entry) {
 
         	client.getArticle(entry, function(err, content) {
       			console.log('Downloaded %s (%s): %s...', entry, pageid, content.substr(0, 25).replace(/\n/g, ' '));
-      			
+
       			/* load page revision information */
 				var rev_count = 0;
 				var all_revisions = [];
 				var first_edit, last_edit;
-				
+
 //				getRevisionInfo(myparams, function(revisions) {
 //				    if (revisions) {
 //				    	rev_count += revisions.length;
-//			
+//
 //				    	if (last_edit == null)
 //				    		last_edit = revisions[0].timestamp;
 //				    	first_edit = revisions[revisions.length - 1].timestamp;
 //				    }
 //				}, function() { // finalcall function
-				
+
 					/* save the page content in the database */
-					upd_stmt.run( pageid, content, rev_count, first_edit, last_edit, entry, function(err){ 
+					upd_stmt.run( pageid, content, rev_count, first_edit, last_edit, entry, function(err){
 						packEntryList([entry], function(msg) {
 							soc.emit('updateEntries', msg);
 						});
 					});
-				
+
 //				});
 
       		});
 
         } else { /* page not found */
         	console.log('Page not found: ', entry, ' pageId:', pageid);
-  			upd_stmt.run( pageid, null, 0, 0, 0, entry, function(err){ 
+  			upd_stmt.run( pageid, null, 0, 0, 0, entry, function(err){
   				packEntryList([entry], function(msg) {
   					soc.emit('updateEntries', msg);
   				});
   			});
         }
-        
+
 	});
 }
 
 /**
  * Updates the root distance for specified entry if it is smaller than the saved distance.
- * 
+ *
  * @param entry entry name to update
  * @param dist new distance value
  */
-var getrtd_stmt = db.prepare("SELECT dist FROM entries WHERE entry = ?"); 
-var updrtd_stmt = db.prepare("UPDATE entries SET dist = ? WHERE entry = ?"); 
+var getrtd_stmt = db.prepare("SELECT dist FROM entries WHERE entry = ?");
+var updrtd_stmt = db.prepare("UPDATE entries SET dist = ? WHERE entry = ?");
 function setRootDist(entry, dist, callback) {
 	getrtd_stmt.get( entry, function(err, old_dist) {
-		if (old_dist == null || old_dist < dist) {
-			callback && callback()
+		if (old_dist === null || old_dist < dist) {
+			callback && callback();
 		} else {
 			updrtd_stmt.run(dist, entry, callback);
 		}
@@ -288,18 +288,18 @@ function handleUpdateComment(msg) {
 var newsrc_stmt = db.prepare("INSERT INTO cat_src (entry, src_entry) VALUES (?, ?)");
 /**
  * Insert new source for the entry
- * 
+ *
  */
 function insertSource(entry_name, src_entry, callback) {
 	newsrc_stmt.run(entry_name, src_entry, function(err) {
 		if (err) console.log("already in DB: " + entry_name + " <- " + src_entry);
 		else console.log('new pair entity-source inserted: ' + entry_name + " <- " + src_entry);
 		callback && callback(entry_name, src_entry) ;
-	}); 
+	});
 }
 
 function finishSrcInsert(newEntries, updatedEntries, callback) {
-	if (updatedEntries.length > 0) 
+	if (updatedEntries.length > 0)
 		packEntryList(updatedEntries, function(msg) {
 			//console.log('updateEntries', msg);
 			soc.emit('updateEntries', msg);
@@ -322,39 +322,39 @@ var inclnk_stmt = db.prepare("UPDATE entries SET link_count = link_count + ?, pa
 var incmnt_stmt = db.prepare("UPDATE entries SET mentions = mentions + 1, dist = ? WHERE entry = ?");
 
 /**
- * Inserts a list fo new parsed out entries into a database, 
+ * Inserts a list fo new parsed out entries into a database,
  * performs all necessary checks, emits events for update and additions
- * 
+ *
  * @param cats a list of new parsed out entries
  * @param src_entry_name the name of the entry the list was parsed out from (will be added to update list)
  * @params how how the list was obtained ('parsed' or 'cats_loaded')
  */
 function insertParsedEntries(cats, src_entry_name, how, callback) {
-	
+
 	/* retrieve source entry distance */
 	exists_stmt.get( src_entry_name, function(err, dist_row) {
 		var src_dist = dist_row.dist;
-		
+
 		/* overide the method how this entity was created */
 		switch (how) {
 		case 'parsed':
-			dist_row.parsed = 1
+			dist_row.parsed = 1;
 			break;
 		case 'cats_loaded':
 			dist_row.cats_loaded = 1;
 			break;
 		default:
-			console.log('Unable to understand how method ', how)
+			console.log('Unable to understand how method ', how);
 			break;
 		}
 		/* increase link count */
 		inclnk_stmt.run(cats.length, dist_row.parsed, dist_row.cats_loaded, src_entry_name, function(err) {
-		
+
 			var newEntries = [],
 				updatedEntries = [src_entry_name];
 			/* for each extracted category */
 			cats.forEach( function(mycat, i, ar)  {
-				
+
 				/* check if it already exists in the database */
 				exists_stmt.get( mycat, function(err, row) {
 					if (row) { /* entry already in the database */
@@ -364,7 +364,7 @@ function insertParsedEntries(cats, src_entry_name, how, callback) {
 							insertSource( mycat, src_entry_name, function(main_entry, src_entry) {
 								/* add to update list */
 								updatedEntries.push(main_entry);
-								if (updatedEntries.length + newEntries.length - 1 == cats.length) 
+								if (updatedEntries.length + newEntries.length - 1 == cats.length)
 									finishSrcInsert(newEntries, updatedEntries, callback);
 							});
 						});
@@ -383,7 +383,7 @@ function insertParsedEntries(cats, src_entry_name, how, callback) {
 							insertSource( mycat, src_entry_name, function( main_entry, src_entry) {
 								/* add entry to new entries list */
 								newEntries.push(main_entry);
-								if (updatedEntries.length + newEntries.length - 1 == cats.length) 
+								if (updatedEntries.length + newEntries.length - 1 == cats.length)
 									finishSrcInsert(newEntries, updatedEntries, callback);
 							});
 						});
@@ -398,25 +398,25 @@ var getcont_stmt = db.prepare("SELECT content FROM entries WHERE entry = ?");
 var cat_re = new RegExp("\\[\\[(" + cat_name + "[^\\]\\|]+)(?:\\|[^\\]]+)?\\]\\]");
 /**
  * Parse Wikipedia entry, insert new entries into the database
- * 
+ *
  * @param entry_name the name of the entry
  */
 function handleParseEntry(entry_name) {
 	console.log('parse request for ' + entry_name);
 	var foundcat_count = 0;
-	
+
 	/* retrieve page content from database */
 	getcont_stmt.get(entry_name, function(err, row) {
 
 		/* parsing out categories */
 		var lines = row.content.match(/[^\r\n]+/g);
-		
+
 		//console.log(lines);
 		/* build an array of categories */
 		var cats = [];
 		for( var i = 0; i < lines.length; i++) {
 			var ma = cat_re.exec(lines[i]);
-			if( ma ) 
+			if( ma )
 				cats.push(ma[1]);
 		}
 		//console.log(cats);
@@ -430,19 +430,19 @@ function handleParseEntry(entry_name) {
  * @param entry Wikipedia category name
  */
 function handleLoadSubcats(entry, callback) {
-	
+
 	var category = entry.substring(cat_name.length);
-	
+
 	console.log("Retrieving category: " + category);
 	client.getPagesInCategory(category, function(err, pages) {
 		console.log("Pages: ", pages);
 		if (pages.length > 0) {
 			insertParsedEntries(pages.map(function(page) {
-				return page.title
+				return page.title;
 			}), entry, 'cats_loaded', callback);
 		} else {
 			console.log("Not found: " + entry);
-  			upd_stmt.run( -1, null, 0, 0, 0, entry, function(err){ 
+  			upd_stmt.run( -1, null, 0, 0, 0, entry, function(err){
   				packEntryList([entry], function(msg) {
   					soc.emit('updateEntries', msg);
   				});
@@ -456,9 +456,9 @@ function getRevisionInfo(params, callback, finalcall) {
 	client.api.call(params, function(err, info, next, data) {
 		var pageid = Object.keys(data.query.pages).shift();
 	    //console.log(data); //.query.pages[pageid].revisions);
-	
+
 		callback && callback(data.query.pages[pageid].revisions);
-	
+
 	    if (data["query-continue"] && data["query-continue"].revisions) {
 	    	params.rvcontinue = data["query-continue"].revisions.rvcontinue;
 	    	getRevisionInfo(params, callback, finalcall);
@@ -472,7 +472,7 @@ var newent_stmt = db.prepare("INSERT INTO entries (entry) VALUES (?)");
 var newsrc_stmt = db.prepare("INSERT INTO cat_src (entry, src_entry) VALUES (?, ?)");
 /**
  * Adds a new entry to the database from WUI, sends an update or an error to WUI
- * 
+ *
  * @param msg { entry: entry_name, src : source_entry_name}
  */
 function handleNewEntry(msg) {
@@ -485,13 +485,13 @@ function handleNewEntry(msg) {
 		else {
 			if (msg.src) { /* source entry has been specified */
 				newsrc_stmt.run(entry_name, msg.src, function(err) {
-					if (err) 
+					if (err)
 						console.log("entry-source already exist: " + msg.src + " -> " + entry_name);
 					packEntryList( [entry_name],
 						function(upd_entry_list) {
 							soc.emit('addEntries', upd_entry_list );
 					});
-				})
+				});
 			} else
 				packEntryList( [entry_name],
 					function(upd_entry_list) {

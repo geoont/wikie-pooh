@@ -26,7 +26,7 @@ if any dependencies are missing simply install them with npm install.
 
 ### Interactive Server-based Version
 
-1. Initialize new experiment: ```nodejs ../experiment_init.js 0.cat npp.sqlite3``` where ```0.cat``` is a list of initial categories with one category per line and npp.sqlite3 is a new database
+1. Initialize new experiment: ```node ../experiment_init.js 0.cat npp.sqlite3``` where ```0.cat``` is a list of initial categories with one category per line and npp.sqlite3 is a new database
 2. Update database to current version: ```node ../experiment_fix.js en npp.sqlite3``` (may not be needed but it won't break the database)
 3. Launch the server: ```node ../experiment_srv.js en npp.sqlite3```
 4. Open in the browser: http://localhost:8282

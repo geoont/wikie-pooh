@@ -13,13 +13,19 @@ Refactor existing code into completely cloud version with datastore in MongoDB.
 
 ## Essential Components
 
-- [ ] Tool to import existing databases `sqlite2mongo.js`
+- [ ] Tool to manage mongo database `mongoman.js`
+ - [ ] help
  - [ ] connection to mLab mongo with a token
- - [ ] pull from pages
- - [ ] pull from links
- - [ ] create mongo record
- - [ ] check resulting db
- - [ ] check resulting db size
+ - [ ] list experiments with sizes/record counts
+ - [ ] rm experiment
+ - [ ] import sqlite database
+  - [ ] pull from pages
+  - [ ] pull from links
+  - [ ] create mongo record
+  - [ ] check resulting db
+  - [ ] check resulting db size
+ - [ ] dump experiment
+ - [ ] restore experiment
 - [ ] create a structure of the express application for heroku
  - [ ] can I set app name to wikie-pooh3?
  - [ ] connection to database

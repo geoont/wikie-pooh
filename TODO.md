@@ -8,19 +8,28 @@ Refactor existing code into completely cloud version with datastore in MongoDB.
 
 - [x] Create Heroku account
 - [x] Create MLab account
-- [ ] Learn how to deploy an app on Heroku
-- [ ] Learn how to store graphs in MongoDB
+- [x] Learn how to deploy an app on Heroku
+- [x] Learn how to store graphs in MongoDB
 
-## Components
+## Essential Components
 
-- [ ] Authentication
+- [ ] Tool to import existing databases `sqlite2mongo.js`
+ - [ ] connection to mLab mongo with a token
+ - [ ] pull from pages
+ - [ ] pull from links
+ - [ ] create mongo record
+ - [ ] check resulting db
+ - [ ] check resulting db size
+- [ ] create a structure of the express application for heroku
+ - [ ] can I set app name to wikie-pooh3?
+ - [ ] connection to database
+ - [ ] default unguessable path opens experiment selector
 - [ ] Experiment creation and selection
  - [ ] New experiment name
  - [ ] New experiment comment
  - [ ] Language
  - [ ] Selection from the list of existing experiments
  - [ ] Seed pages
-- [ ] Tool to import of the existing databases
 - [ ] Use http://datatables.net instead of a regular HTML table
  - [ ] Implement paging
 - [ ] Tool to backup mongo database
@@ -30,3 +39,6 @@ Refactor existing code into completely cloud version with datastore in MongoDB.
 - [ ] Page retrieve
 - [ ] Page parse
 
+## Features down the road
+
+- [ ] Authentication (as a wrokaround hide behind unpublished URL path)

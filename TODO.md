@@ -19,11 +19,11 @@ Refactor existing code into completely cloud version with datastore in MongoDB.
  - [ ] list experiments with sizes/record counts
  - [ ] rm experiment
  - [ ] import sqlite database
-  - [ ] pull from pages
-  - [ ] pull from links
-  - [ ] create mongo record
-  - [ ] check resulting db
-  - [ ] check resulting db size
+  - [ ] * pull from pages
+  - [ ] * pull from links
+  - [ ] * create mongo record
+  - [ ] * check resulting db
+  - [ ] * check resulting db size
  - [ ] dump experiment
  - [ ] restore experiment
 - [ ] create a structure of the express application for heroku

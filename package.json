@@ -15,13 +15,14 @@
   "author": "Alex Sorokine and Chen-Chieh Feng",
   "license": "MIT",
   "readmeFilename": "README.md",
-  "dependencies" : {
-    "nodemw" : ">=0.4.2",
-    "line-reader" : ">=0.2.3",
-    "async" : ">=0.8.0",
-    "socket.io": "1.2.0",
+  "dependencies": {
+    "async": ">=0.8.0",
+    "finalhandler": ">=0.3.2",
+    "line-reader": ">=0.2.3",
+    "mongoose": "^4.4.14",
+    "nodemw": ">=0.4.2",
     "serve-static": "1.7.1",
-    "finalhandler" : ">=0.3.2",
-    "sqlite3" : ">=3.0.4"
+    "socket.io": "1.2.0",
+    "sqlite3": ">=3.0.4"
   }
 }
